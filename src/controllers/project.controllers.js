@@ -28,3 +28,16 @@ const updateMemberRole = asyncHandler(async (req, res) => {
 const deleteMember = asyncHandler(async (req, res) => {
   const { email, password, username, role } = req.body;
 });
+
+export {
+  getProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
+  addMemberToProject,
+  getProjectMembers,
+  updateProjectMembers,
+  updateMemberRole,
+  deleteMember,
+};

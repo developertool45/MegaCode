@@ -7,18 +7,17 @@ const projectMemberSchema = new Schema(
       ref: 'User',
       required: true,
     },
-      
+
     project: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
     role: {
-        type: String, 
-        enum: AvailableUserRoles,
-        default: UserRolesEnum.MEMBER
-        }, 
-    
+      type: String,
+      enum: AvailableUserRoles,
+      default: UserRolesEnum.MEMBER,
+    },
   },
   { timestamps: true },
 );
