@@ -1,2 +1,19 @@
-node_modules
+# Node modules
+node_modules/
+# dotenv environment variables
 .env
+.env.*.local
+
+# Uploads or temp files
+uploads/
+temp/
+tmp/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+
+pids/
+*.log
+
