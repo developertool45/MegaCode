@@ -265,7 +265,7 @@ const logOutUser = asyncHandler(async (req, res) => {
   }
 });
 
-
+// forgot password
 const forgotPasswordRequest = asyncHandler(async (req, res) => {
   console.log("=====forgotPasswordRequest controller=====")
   const { email } = req.body;
@@ -314,6 +314,7 @@ const forgotPasswordRequest = asyncHandler(async (req, res) => {
     );
   }
 });
+// change current password
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   console.log("=====changeCurrentPassword controller=====")
   try {
@@ -385,6 +386,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     );    
   }
 });
+// refresh access token
 const refreshAccessToken = asyncHandler(async (req, res) => {
   console.log("=====refreshAccessToken controller=====")
   try {

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { ProjectMember } from "./projectmember.models.js";
 
 const projectSchema = new Schema(
   {
@@ -21,5 +22,10 @@ const projectSchema = new Schema(
   },
   { timestamps: true },
 );
+
+//check ownewership
+projectSchema.methods.isOwner = function (userId) {
+  return this.createdBy.toString() === userId.toString();
+};
 
 export const Project = mongoose.model('Project', projectSchema);
