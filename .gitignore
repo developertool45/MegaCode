@@ -3,16 +3,8 @@ node_modules/
 .env
 .env.sample
 
-# Uploads or temp files
-uploads/
-temp/
-tmp/
-
-# OS-specific
-.DS_Store
-Thumbs.db
 
 
-pids/
-*.log
+
+
 
