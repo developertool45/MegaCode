@@ -1,8 +1,7 @@
-# Node modules
+
 node_modules/
-# dotenv environment variables
 .env
-.env.*.local
+.env.sample
 
 # Uploads or temp files
 uploads/
