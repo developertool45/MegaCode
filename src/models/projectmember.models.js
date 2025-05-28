@@ -13,7 +13,7 @@ const projectMemberSchema = new Schema(
       ref: 'Project',
       required: true,
     },
-    role: {
+    role: { 
       type: String,
       enum: AvailableUserRoles,
       default: UserRolesEnum.MEMBER,

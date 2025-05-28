@@ -22,18 +22,10 @@ router
 router
 	.route("/new-project")
 	.post(isLoggedIn,createProject)	
-router
-	.route("/get-project")
-	.post(isLoggedIn,getProjectById)	
-router
-	.route("/update-project")
-	.post(isLoggedIn,updateProject)	
-router
-	.route("/delete-project")
-	.post(isLoggedIn,deleteProject)	
-router
-	.route("/add-project-member")
-	.post(isLoggedIn,addMemberToProject)	
-
+router.route('/get-project/:projectId').post(isLoggedIn, getProjectById);
+router.route('/update-project').post(isLoggedIn, updateProject);
+router.route('/delete-project').post(isLoggedIn, deleteProject);
+router.route('/add-project-member/:projectId').post(isLoggedIn, addMemberToProject);
+router.route('/project-members/:projectId').post(isLoggedIn, getProjectMembers);
 
 export default router;

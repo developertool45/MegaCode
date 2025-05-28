@@ -59,8 +59,8 @@ router
   .route('/refresh-token')
   .post(refreshAccessToken);
   
-router.
-  route('/upload-avatar')
+router
+  .route('/upload-avatar')
   .patch(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
 
 
