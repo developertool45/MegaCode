@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validate } from '../middleware/validator.middleware.js';
 import { userRegisterUserValidator, loginUserValidator } from '../validators/index.js';
+import { upload } from '../middleware/multer.middleware.js';
 const router = Router();
 
 //login middleware
@@ -15,6 +16,7 @@ import {
   forgotPasswordRequest,
   changeCurrentPassword,
   getCurrentUser,
+  uploadUserAvatar
 } from '../controllers/auth.controller.js';
 
 
@@ -57,4 +59,9 @@ router
   .route('/refresh-token')
   .post(refreshAccessToken);
   
+router.
+  route('/upload-avatar')
+  .patch(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
+
+
 export default router;

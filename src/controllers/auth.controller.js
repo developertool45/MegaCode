@@ -14,6 +14,8 @@ import {
   emailRestPasswordMailGenContent,
 } from '../utils/mail.js';
 
+import {uploadOnCloudinary} from '../utils/cloudinary.js'
+
 //auth register controller
 const registerUser = asyncHandler(async (req, res) => {
   //for checking controller
@@ -419,6 +421,52 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+const uploadUserAvatar = asyncHandler(async (req, res) => {
+  console.log("=====uploadUserAvatar controller=====")
+  const userId = req.user?._id;
+  const avatarLocalPath = req.file?.path;
+  try {
+    if (!userId) {
+      throw new ApiError(401, "Unauthorized request! Please login first.");
+    }
+    if (!avatarLocalPath) {
+      throw new ApiError(400, "Avatar not found!");
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found!");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatar?.url) {
+      throw new ApiError(400, "Error while uploading avatar")
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, {    
+        $set: {
+          avatar: {
+              url: avatar.url,
+              localpath: avatarLocalPath || ""
+        }    
+      }      
+    },{ new: true }
+    ).select("-password -refreshToken -refreshTokenExpiry");
+    
+    await user.save();
+    return res.status(200).json(
+      new ApiResponse(200,updatedUser,
+        "Avatar uploaded successfully!"
+      )
+    );
+  } catch (error) {
+    res.status(400).json(
+      new ApiResponse(400,
+        error,
+        "User logged In failed.",
+      )
+    )
+  }
+})
+
 export {
   registerUser,
   loginUser,
@@ -429,4 +477,5 @@ export {
   forgotPasswordRequest,
   changeCurrentPassword,
   getCurrentUser,
+  uploadUserAvatar
 };
