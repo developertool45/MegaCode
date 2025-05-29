@@ -12,6 +12,7 @@ import auth from './routes/auth.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
+import subTasksRoutes from './routes/subTasks.routes.js';
 
 // middleware for form and json data
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use('/api/v1/healthcheck', healthCheck);
 app.use('/api/v1/users', auth);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/tasks', tasksRoutes);
+app.use('/api/v1/subtasks', subTasksRoutes);
 app.use('/api/v1/notes', notesRoutes);
 
 
