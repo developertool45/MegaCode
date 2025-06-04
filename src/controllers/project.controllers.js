@@ -4,7 +4,7 @@ import ApiResponse from '../utils/api-response.js';
 import { ApiError } from '../utils/api-errors.js';
 import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
-import mongoose from 'mongoose';
+import {UserRolesEnum} from '../utils/contants.js'
 
 const getProjects = asyncHandler(async (req, res) => {
   console.log('=====getProjects controller=====');
@@ -82,7 +82,8 @@ const createProject = asyncHandler(async (req, res) => {
     }
     const projectMember = await ProjectMember.create({
       user: userId,
-      project: project._id,      
+      project: project._id,  
+      role: UserRolesEnum.ADMIN
     });
 
     if (!projectMember) {
@@ -117,7 +118,7 @@ const updateProject = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Project not found!');
   }
 
-  if (userId.toString() !== project.createdBy.toString()) {
+  if(!project.createdBy.equals(userId)){
     throw new ApiError(403, 'You are not authorized to update this project!');
   }
 
