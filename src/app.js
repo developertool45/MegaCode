@@ -2,6 +2,7 @@ import express from 'express';
 const app = express();
 import cookieParser from 'cookie-parser';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
+import cors from 'cors';
 
 //cookie parser
 app.use(cookieParser())
@@ -14,9 +15,18 @@ import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
 import subTasksRoutes from './routes/subTasks.routes.js';
 
+
 // middleware for form and json data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+app.use(cors({
+	origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+	methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	credentials: true,	
+}))
 
 // all routes
 app.use('/api/v1/healthcheck', healthCheck);

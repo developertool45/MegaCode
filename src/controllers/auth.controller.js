@@ -24,8 +24,8 @@ const registerUser = asyncHandler(async (req, res) => {
   // console.log(req.body);
   // await User.deleteMany({});
 
-  const { fname, email, password, username, role } = req.body;
-  if (!email || !password || !username) {
+  const { fname, email, password, username} = req.body;
+  if (!email || !password || !fname) {
     throw new ApiError(400, 'All fields are required');
   }
   const existingUser = await User.findOne({ email });
@@ -64,6 +64,8 @@ const registerUser = asyncHandler(async (req, res) => {
   await user.save();
   return res.send(
     new ApiResponse(201, {
+      user,
+      sucess:true,
       message: 'user got registered, please check your email to verify',
     }),
   );
