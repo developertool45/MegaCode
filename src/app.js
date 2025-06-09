@@ -22,8 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 app.use(cors({
-	origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-	methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+	origin: process.env.CORS_ORIGIN || 'http://localhost:5174',
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	credentials: true,	
 }))

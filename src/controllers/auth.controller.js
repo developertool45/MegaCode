@@ -21,9 +21,6 @@ const registerUser = asyncHandler(async (req, res) => {
   //for checking controller
   console.log('========register controller======');
 
-  // console.log(req.body);
-  // await User.deleteMany({});
-
   const { fname, email, password, username} = req.body;
   if (!email || !password || !fname) {
     throw new ApiError(400, 'All fields are required');
@@ -38,7 +35,6 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     username,
     fname,
-    role,
   });
 
   if (!user) {
@@ -63,11 +59,14 @@ const registerUser = asyncHandler(async (req, res) => {
   });
   await user.save();
   return res.send(
-    new ApiResponse(201, {
-      user,
-      sucess:true,
-      message: 'user got registered, please check your email to verify',
-    }),
+    new ApiResponse(201, 
+      {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },      
+      'user got registered, please check your email to verify',
+    ),
   );
 });
 
@@ -125,7 +124,6 @@ const loginUser = asyncHandler(async (req, res) => {
   //get extracted data for login
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       throw new ApiError(403, 'all fields are required.');
     }
@@ -134,6 +132,11 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(400, 'your credentials are wrong, please re-enter the right One.');
     }
+
+    if (!user.isEmailVerified) {
+      throw new ApiError(400, 'please verify your email first.');
+    }
+
     const isPasswordCorrect = await user.isPasswordCorrect(password);
 
     if (!isPasswordCorrect) {
@@ -178,7 +181,7 @@ const loginUser = asyncHandler(async (req, res) => {
         ),
       );
   } catch (error) {
-    return res.status(400).json(new ApiResponse(400, error, 'login failed.'));
+    return res.status(400).json(new ApiResponse(400, error.message, 'User logged In failed.'));
   }
 });
 // resend verification email
@@ -210,7 +213,7 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
     user.emailVerificationTokenExpiry = tokenExpiry;
 
     // send the email
-    const verificationUrl = `${process.env.BASE_URL}/api/v1/users/verify-email/?token=${unHashedToken}`;
+    const verificationUrl = `${process.env.FRONTEND_URL}/email-verified/?token=${unHashedToken}`;
     const verificationEmailGenContent = emailVerificationMailGenContent(
       user.username,
       verificationUrl,
@@ -283,7 +286,7 @@ const forgotPasswordRequest = asyncHandler(async (req, res) => {
     user.passwordResetTokenExpiry = tokenExpiry;
 
     // send the email
-    const resetPasswordUrl = `${process.env.BASE_URL}/api/v1/users/reset-password/?token=${unHashedToken}`;
+    const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/?token=${unHashedToken}`;
     const resetPasswordEmailGenContent = emailRestPasswordMailGenContent(
       user.username,
       resetPasswordUrl,
