@@ -76,6 +76,7 @@ const VerifyUser = asyncHandler(async (req, res) => {
   try {
     //extract token from link
     const token = req.query?.token;
+    console.log(token);
 
     if (!token) {
       throw new ApiError(400, 'token not found, link got expired');
@@ -93,6 +94,9 @@ const VerifyUser = asyncHandler(async (req, res) => {
         message: 'token expired',
       });
     }
+
+    console.log(user);
+    
     // empty these fields
     user.emailVerificationToken = null;
     user.emailVerificationTokenExpiry = null;

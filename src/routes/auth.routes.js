@@ -26,7 +26,7 @@ router
   .post(userRegisterUserValidator(), validate, registerUser);
   
 router
-  .route('/verify-email')
+  .route('/verify-email/')
   .get(VerifyUser);
 router
   .route('/login')
