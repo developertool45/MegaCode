@@ -175,17 +175,16 @@ const loginUser = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           {
-            user: {
-              email: loggedInUser.email,
-              username: loggedInUser.username,
-              fname: loggedInUser.fname,
-            },
+            email: loggedInUser.email,
+            username: loggedInUser.username,
+            fname: loggedInUser.fname,
+            id: loggedInUser._id
           },
           'User logged In Successfully',
         ),
       );
   } catch (error) {
-    return res.status(400).json(new ApiResponse(400, error.message, 'User logged In failed.'));
+    return res.status(400).json(new ApiResponse(400, error, error.message));
   }
 });
 // resend verification email
@@ -312,9 +311,10 @@ const forgotPasswordRequest = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   console.log('=====changeCurrentPassword controller=====');
   try {
-    const { password } = req.body;
-    const token = req.query?.token;
-
+    const { password, token } = req.body;
+    // const token = req.query?.token;
+    console.log("token",token);
+    
     if (!token) {
       throw new ApiError(400, 'Token is required');
     }
@@ -323,10 +323,15 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     }
 
     const hashToken = crypto.createHash('sha256').update(token).digest('hex');
+  
     const user = await User.findOne({
       passwordResetToken: hashToken,
       passwordResetTokenExpiry: { $gt: Date.now() },
-    }).select('-password -refreshToken -refreshTokenExpiry');
+    }).select(' -refreshToken -refreshTokenExpiry');
+
+    if(user.passwordResetToken==null){
+      throw new ApiError(400, 'Token is invalid or has expired'); 
+    }
 
     if (!user) {
       throw new ApiError(400, 'Token is invalid or has expired');
@@ -335,9 +340,15 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     user.password = password;
     user.passwordResetToken = null;
     user.passwordResetTokenExpiry = null;
-    await user.save();
-
-    return res.status(200).json(new ApiResponse(200, 'Password reset successfully!'));
+    await user.save(); 
+    
+    return res.status(200).json(
+      new ApiResponse(200, {
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        id: user._id,
+      },'Password reset successfully!'));
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, error, 'Password reset failed.'));
   }
@@ -350,19 +361,14 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
     }
-    const user = await User.findById(userId).select('-password -refreshToken -refreshTokenExpiry');
+    const user = await User.findById(userId).select('-password -refreshToken -refreshTokenExpiry -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry');
     if (!user) {
       throw new ApiError(404, 'User not found!');
     }
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          name: user.fname,
-          email: user.email,
-          username: user.username,
-          role: user.role,
-        },
+        user,
         'User found successfully!',
       ),
     );

@@ -9,6 +9,9 @@ import { asyncHandler } from '../utils/async-handler.js';
 export const isLoggedIn = asyncHandler(async (req, res, next) => {
   const accessToken = req.cookies?.accessToken;
   const refreshToken = req.cookies?.refreshToken;
+  // console.log('accessToken', accessToken);
+  // console.log('refreshToken', refreshToken);
+  console.log("=======isLoggedIn middleware=======");
 
   if (!accessToken) {
     if (refreshToken) {
