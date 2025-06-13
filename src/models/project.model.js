@@ -25,7 +25,7 @@ const projectSchema = new Schema(
 
 //check ownewership
 projectSchema.methods.isOwner = function (userId) {
-  return this.createdBy.toString() === userId.toString();
+  return this.createdBy.isEqual(userId);
 };
 
 export const Project = mongoose.model('Project', projectSchema);

@@ -13,7 +13,8 @@ const getProjects = asyncHandler(async (req, res) => {
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
     }
-    const projects = await Project.find({ createdBy: userId });
+    const projects = await Project.find({ createdBy: userId }).populate("createdBy");
+        
     if (!projects || projects.length === 0) {
       console.log('No projects found');
       throw new ApiError(404, 'No projects found!');
@@ -57,7 +58,7 @@ const getProjectById = asyncHandler(async (req, res) => {
 });
 const createProject = asyncHandler(async (req, res) => {
   try {
-    const { name, description, role } = req.body;
+    const { name, description } = req.body;
     const userId = req.user._id;
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
@@ -75,7 +76,7 @@ const createProject = asyncHandler(async (req, res) => {
       name,
       description,
       createdBy: userId,
-    });
+    }.populate("createdBy"));
 
     if (!project) {
       throw new ApiError(400, 'Project could not be created!');
@@ -94,7 +95,7 @@ const createProject = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, project, 'Project created successfully!'));
   } catch (error) {
-    res.status(400).json(new ApiResponse(400, error.message));
+    res.status(400).json(new ApiResponse(400, error, error.message));
   }
 });
 const updateProject = asyncHandler(async (req, res) => {
