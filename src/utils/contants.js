@@ -12,6 +12,14 @@ export const TaskStatusEnum = {
 }
 export const AvailableTaskStatus = Object.values(TaskStatusEnum);
 
+export const ProjectStatusEnum = {
+    pending: "pending",
+    in_progress: "in_progress",
+    completed: "completed"
+}
+export const AvailableProjectStatus = Object.values(ProjectStatusEnum);
+
+
 export const options = {
     httpOnly: true,
     secure: true,

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { ProjectMember } from "./projectmember.models.js";
+ import {ProjectStatusEnum, AvailableProjectStatus} from "../utils/contants.js";
 
 const projectSchema = new Schema(
   {
@@ -13,6 +14,11 @@ const projectSchema = new Schema(
     description: {
       type: String, 
       trim: true,
+    },
+    status: {
+      type: String,
+      enum: AvailableProjectStatus,
+      default: ProjectStatusEnum.in_progress,
     },
     createdBy: {
         type: Schema.Types.ObjectId,

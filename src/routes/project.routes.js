@@ -22,9 +22,9 @@ router
 router
 	.route("/new-project")
 	.post(isLoggedIn,createProject)	
-router.route('/get-project/:projectId').post(isLoggedIn, getProjectById);
-router.route('/update-project').post(isLoggedIn, updateProject);
-router.route('/delete-project').post(isLoggedIn, deleteProject);
+router.route('/get-project/:projectId').get(isLoggedIn, getProjectById);
+router.route('/update-project/:projectId').post(isLoggedIn, updateProject);
+router.route('/delete-project/:projectId').post(isLoggedIn, deleteProject);
 router.route('/add-project-member/:projectId').post(isLoggedIn, addMemberToProject);
 router.route('/project-members/:projectId').post(isLoggedIn, getProjectMembers);
 router.route('/update-project-members/:projectId').post(isLoggedIn, updateProjectMembers);
