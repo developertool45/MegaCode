@@ -5,6 +5,8 @@ import { ApiError } from '../utils/api-errors.js';
 import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
 import {UserRolesEnum, AvailableUserRoles, ProjectStatusEnum} from '../utils/contants.js'
+import mongoose from 'mongoose';
+import e from 'express';
 
 const getProjects = asyncHandler(async (req, res) => {
   console.log('=====getProjects controller=====');
@@ -334,7 +336,7 @@ const updateMemberRole = asyncHandler(async (req, res) => {
   if (!superAdmin) {
     throw new ApiError(404, 'Project members could not be found!');
   }
-  if (superAdmin.role !== 'admin') {
+  if (superAdmin.role !== UserRolesEnum.PROJECT_ADMIN) {
     throw new ApiError(403, 'You are not authorized to update members of this project!');
   }
 
@@ -350,50 +352,67 @@ const updateMemberRole = asyncHandler(async (req, res) => {
 });
 
 const deleteMember = asyncHandler(async (req, res) => {
-  console.log("=========deleteMember controller==========");
-  const userId = req.user._id;
-  const { projectId, memberId } = req.params;
-  if (!userId) {
-    throw new ApiError(401, 'Unauthorized request! Please login first.');
-  }
-  if (!projectId) {
-    throw new ApiError(400, 'Please provide a project id!');
-  }
-  if (!memberId) {
-    throw new ApiError(400, 'Please provide a member id!');
-  }
-
-  const project = await Project.findById(projectId);
-  if (!project) {
-    throw new ApiError(404, 'Project not found!');
-  }
-  if (!project.createdBy.equals(userId)) {
-    throw new ApiError(403, 'You are not authorized to update members of this project!');
-  }
+  try {
+    console.log("=========deleteMember controller==========");
+    const userId = req.user._id;
+    const { projectId, memberId } = req.params;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized request! Please login first.');
+    }
+    if (!projectId) {
+      throw new ApiError(400, 'Please provide a project id!');
+    }
+    if (!memberId) {
+      throw new ApiError(400, 'Please provide a member id!');
+    }
   
-  const superAdmin = await ProjectMember.findOne({
-    project: projectId,
-    user: userId,
-  });
-  if (!superAdmin) {
-    throw new ApiError(404, 'Project members could not be found!');
-  }  
-  if (superAdmin.role !== 'project_admin') {
-    throw new ApiError(403, 'You are not authorized to update members of this project!');
-  }
-  const removeMember = await ProjectMember.deleteOne({
-    user: memberId,
-    project: projectId,
-  }, { new: true });
-  console.log(removeMember);
+    const project = await Project.findById(projectId);
+    if (!project) {
+      throw new ApiError(404, 'Project not found!');
+    }
+    if (!project.createdBy.equals(userId)) {
+      throw new ApiError(403, 'You are not authorized to update members of this project!');
+    }
   
-  if (!removeMember) {
-    throw new ApiError(404, 'Project members could not be found!');
-  }
+    const member = await ProjectMember.findOne({
+      project:projectId,
+      user:memberId,
+    });
+          
+    
+    if (!member) {
+      throw new ApiError(404, 'Project members could not be found!');
+    }
+    
+    const superAdmin = await ProjectMember.findOne({
+      project: projectId,
+      user: userId,
+    });
+     
+    if (!superAdmin || (superAdmin.role !== UserRolesEnum.PROJECT_ADMIN) ) {
+      throw new ApiError(403, 'You are not authorized to update members of this project!');
+    }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, removeMember, 'project members deleted successfully!'));
+    
+    const removeMember = await ProjectMember.findOneAndDelete({
+      user: memberId,
+      project: projectId,
+    }, { new: true });
+    
+       
+    if (!removeMember || removeMember.deletedCount === 0) {
+      throw new ApiError(404, 'Project member could not be found or already deleted!');
+    }   
+    
+    console.log(removeMember);
+    
+    return res
+      .status(200)
+      .json(new ApiResponse(200, removeMember, 'project members deleted successfully!'));
+    
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error,  error.message));
+  }
 });
 
 export {

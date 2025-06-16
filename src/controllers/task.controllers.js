@@ -3,7 +3,7 @@ import ApiResponse from "../utils/api-response.js";
 import{ asyncHandler} from "../utils/async-handler.js";
 import { ApiError } from "../utils/api-errors.js";
 import { Task } from "../models/task.models.js";
-import { TaskStatusEnum } from "../utils/contants.js";
+import { TaskStatusEnum, UserRolesEnum } from "../utils/contants.js";
 import { Project } from "../models/project.model.js";
 import { ProjectMember } from "../models/projectmember.models.js";
 import { User } from "../models/user.models.js";
@@ -11,57 +11,63 @@ import { User } from "../models/user.models.js";
 // create task
 const createTask = asyncHandler(async (req, res) => {
 	console.log('=====createTask controller=====');
-	const userId = req.user._id
-	const projectId = req.params?.projectId
-	const {title, description, assignedTo, status = TaskStatusEnum.TODO } = req.body
+	try {
+		const userId = req.user._id
+		const projectId = req.params?.projectId
+		const { title, description, assignedTo, status = TaskStatusEnum.TODO } = req.body
+		console.log(title, description, assignedTo, status, projectId);
+		
+		
+		if (!userId) {
+			throw new ApiError(401, "Unauthorized request! Please login first.");
+		}
+		if (!projectId) {
+			throw new ApiError(400, "Please provide a project id!");
+		}
+		if(!title || !description || !assignedTo) {
+			throw new ApiError(400, "Please fill all the fields!");
+		}
 	
-	if (!userId) {
-		throw new ApiError(401, "Unauthorized request! Please login first.");
-	}
-	if (!projectId) {
-		throw new ApiError(400, "Please provide a project id!");
-	}
-	if(!title || !description || !assignedTo) {
-		throw new ApiError(400, "Please fill all the fields!");
-	}
-
-	const project = await Project.findById(projectId)
+		const project = await Project.findById(projectId)
+		
+		if(!project) {
+			throw new ApiError(404, "Project not found!");
+		}
+		const projectMember = await ProjectMember.findOne({ user: userId, project: projectId })
+		
+		
+		if(!projectMember) {
+			throw new ApiError(403, "You are not a member of this project!");
+		}	
 	
-	if(!project) {
-		throw new ApiError(404, "Project not found!");
-	}
-	const projectMember = await ProjectMember.findOne({ user: userId, project: projectId })
+		if(projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
+			throw new ApiError(403, "You are not authorized to create a task in this project!");
+		}
+		const assignedUser = await User.findById({ _id: assignedTo })	
+		if(!assignedUser) {
+			throw new ApiError(404, "Assigned user not found!");
+		}
+		const isAssignedUserInProject = await ProjectMember.findOne({ user: assignedTo, project: projectId })
 	
+		if(!isAssignedUserInProject) {
+			throw new ApiError(403, "Assigned user is not a member of this project!");
+		}
 	
-	if(!projectMember) {
-		throw new ApiError(403, "You are not a member of this project!");
-	}	
-
-	if(projectMember.role !== "admin") {
-		throw new ApiError(403, "You are not authorized to create a task in this project!");
+		const task = await Task.create({
+			title,
+			description,
+			assignedTo,
+			assignedBy: userId,
+			project: projectId,
+			status
+		})
+		if (!task) {
+			throw new ApiError(500, "Error creating task!");
+		}
+		return res.status(200).json(new ApiResponse(200, task, "Task created successfully!"))
+	} catch (error) {
+		return res.status(500).json(new ApiResponse(500, error, error.message));
 	}
-	const assignedUser = await User.findById({ _id: assignedTo })	
-	if(!assignedUser) {
-		throw new ApiError(404, "Assigned user not found!");
-	}
-	const isassignedUserInProject = await ProjectMember.findOne({ user: assignedTo, project: projectId })
-
-	if(!isassignedUserInProject) {
-		throw new ApiError(403, "Assigned user is not a member of this project!");
-	}
-
-	const task = await Task.create({
-		title,
-		description,
-		assignedTo,
-		assignedBy: userId,
-		project: projectId,
-		status
-	})
-	if (!task) {
-		throw new ApiError(500, "Error creating task!");
-	}
-	return res.status(200).json(new ApiResponse(200, task, "Task created successfully!"))
 })
 
 // update task
