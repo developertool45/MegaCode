@@ -13,8 +13,8 @@ import { isLoggedIn } from '../middleware/isLoggedIn.middlewares.js';
 
 router.route('/create-task/:projectId').post(isLoggedIn,createTask);
 router.route('/project-tasks/:projectId').get(isLoggedIn,getAllTasks);
-router.route('/get-task-by-id/:projectId/:id').get(isLoggedIn,getOneTask);
-router.route('/update-task/:projectId/:id').patch(isLoggedIn,updateTask);
-router.route('/delete-task/:projectId/:id').delete(isLoggedIn,deleteTask);
+router.route('/get-task/:projectId/:id').get(isLoggedIn,getOneTask);
+router.route('/update-task/:projectId/:id').post(isLoggedIn,updateTask);
+router.route('/delete-task/:projectId/:id').post(isLoggedIn,deleteTask);
 
 export default router;

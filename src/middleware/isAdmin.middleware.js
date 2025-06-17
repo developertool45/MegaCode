@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/api-errors.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { User } from "../models/user.models.js";
+import { UserRolesEnum } from "../utils/contants.js";
 
 export const isAdmin = asyncHandler(async (req, res, next) => {
 	console.log("=====isAdmin middleware=====");
@@ -13,7 +14,7 @@ export const isAdmin = asyncHandler(async (req, res, next) => {
 	if (!user) {
 		throw new ApiError(404, "User not found!");
 	}
-	if (user.role !== "admin") {
+	if (user.role !== UserRolesEnum.ADMIN) {
 		throw new ApiError(403, "You are not an admin!");
 	}
 	next();
