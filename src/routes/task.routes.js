@@ -7,7 +7,7 @@ import {
 	updateTask,
 	getAllTasks,
 	getOneTask
-} from '../controllers/task.controllers.js'
+} from '../controllers/task.controller.js'
 
 import { isLoggedIn } from '../middleware/isLoggedIn.middlewares.js';
 

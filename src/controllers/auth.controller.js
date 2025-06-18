@@ -21,53 +21,59 @@ const registerUser = asyncHandler(async (req, res) => {
   //for checking controller
   console.log('========register controller======');
 
-  const { fname, email, password, username} = req.body;
-  if (!email || !password || !fname) {
-    throw new ApiError(400, 'All fields are required');
+  try {
+    const { fname, email, password, username} = req.body;
+    if (!email || !password || !fname) {
+      throw new ApiError(400, 'All fields are required');
+    }
+    const existingUser = await User.findOne({ email });
+  
+    if (existingUser) {
+      throw new ApiError(400, 'User already exists');
+    }
+    const user = await User.create({
+      email,
+      password,
+      username,
+      fname,
+    });
+  
+    if (!user) {
+      throw new ApiError(400, 'User not created');
+    }
+    //temporary token generation
+    const { unHashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
+  
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationTokenExpiry = tokenExpiry;
+  
+    // send the email
+    const verificationUrl = `${process.env.FRONTEND_URL}/email-verified/?token=${unHashedToken}`;
+    const verificationEmailGenContent = emailVerificationMailGenContent(
+      user.username,
+      verificationUrl,
+    );
+    await sendMail({
+      email: user.email,
+      subject: 'Please Verify your email',
+      mailgenContent: verificationEmailGenContent,
+    });
+    await user.save();
+    return res.send(
+      new ApiResponse(201, 
+        {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },      
+        'user got registered, please check your email to verify',
+      ),
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, error, error.message));
+    
   }
-  const existingUser = await User.findOne({ email });
-
-  if (existingUser) {
-    throw new ApiError(400, 'User already exists');
-  }
-  const user = await User.create({
-    email,
-    password,
-    username,
-    fname,
-  });
-
-  if (!user) {
-    throw new ApiError(400, 'User not created');
-  }
-  //temporary token generation
-  const { unHashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
-
-  user.emailVerificationToken = hashedToken;
-  user.emailVerificationTokenExpiry = tokenExpiry;
-
-  // send the email
-  const verificationUrl = `${process.env.BASE_URL}/api/v1/users/verify-email/?token=${unHashedToken}`;
-  const verificationEmailGenContent = emailVerificationMailGenContent(
-    user.username,
-    verificationUrl,
-  );
-  await sendMail({
-    email: user.email,
-    subject: 'Please Verify your email',
-    mailgenContent: verificationEmailGenContent,
-  });
-  await user.save();
-  return res.send(
-    new ApiResponse(201, 
-      {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },      
-      'user got registered, please check your email to verify',
-    ),
-  );
 });
 
 // verifyUser controller

@@ -110,25 +110,29 @@ const updateTask = asyncHandler(async (req, res) => {
 
 // get all tasks
 const getAllTasks = asyncHandler(async (req, res) => {
-	const userId = req.user._id
-	if(!userId) {
-		throw new ApiError(401, "Unauthorized request! Please login first.");
+	try {
+		const userId = req.user._id
+		if(!userId) {
+			throw new ApiError(401, "Unauthorized request! Please login first.");
+		}
+		const projectId = req.params?.projectId;
+		console.log("projectId",projectId);
+		
+		if(!projectId) {
+			throw new ApiError(400, "Please provide a project id!");
+		}
+		const tasks = await Task.find({ project: projectId })
+			.populate("assignedTo", " fname email _id")
+			.populate("assignedBy" , " fname email _id")
+			.populate("project", " name _id description")
+		
+		if(!tasks) {
+			throw new ApiError(404, "No tasks found!");
+		}
+		return res.status(200).json(new ApiResponse(200, tasks, "Tasks fetched successfully!"))
+	} catch (error) {
+		return res.status(500).json(new ApiResponse(500, error, error.message));
 	}
-	const projectId = req.params?.projectId;
-	console.log("projectId",projectId);
-	
-	if(!projectId) {
-		throw new ApiError(400, "Please provide a project id!");
-	}
-	const tasks = await Task.find({ project: projectId })
-		.populate("assignedTo", " fname email _id")
-		.populate("assignedBy" , " fname email _id")
-		.populate("project", " name _id description")
-	
-	if(!tasks) {
-		throw new ApiError(404, "No tasks found!");
-	}
-	return res.status(200).json(new ApiResponse(200, tasks, "Tasks fetched successfully!"))
 })
 // get one task
 const getOneTask = asyncHandler(async (req, res) => {

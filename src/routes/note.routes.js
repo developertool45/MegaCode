@@ -5,7 +5,7 @@ import {
     updateNote,
     deleteNote,
     getNotes,
-} from '../controllers/note.controllers.js';
+} from '../controllers/note.controller.js';
 import { isLoggedIn } from '../middleware/isLoggedIn.middlewares.js';
 import { isAdmin } from '../middleware/isAdmin.middleware.js';
 

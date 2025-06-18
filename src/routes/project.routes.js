@@ -13,15 +13,11 @@ import {
 	updateProjectMembers,
 	updateMemberRole,
 	deleteMember,
-} from '../controllers/project.controllers.js';
+} from '../controllers/project.controller.js';
 
 
-router
-	.route("/all-projects")
-	.get(isLoggedIn,getProjects)	
-router
-	.route("/new-project")
-	.post(isLoggedIn,createProject)	
+router.route("/all-projects").get(isLoggedIn, getProjects);	
+router.route("/new-project").post(isLoggedIn, createProject);	
 router.route('/get-project/:projectId').get(isLoggedIn, getProjectById);
 router.route('/update-project/:projectId').post(isLoggedIn, updateProject);
 router.route('/delete-project/:projectId').post(isLoggedIn, deleteProject);

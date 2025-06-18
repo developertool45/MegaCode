@@ -23,9 +23,9 @@ const allSubTasks = asyncHandler(async (req, res) => {
       if (!projectMember) {
           throw new ApiError(403, "You are not a member of this project!");
       }
-      if(projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
-          throw new ApiError(403, "You are not authorized to view subtasks!");
-      }
+      // if(projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
+      //     throw new ApiError(403, "You are not authorized to view subtasks!");
+      // }
   
       const task = await Task.find({ _id: taskId });
       if (!task) {

@@ -5,23 +5,57 @@ import { ApiError } from '../utils/api-errors.js';
 import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
 import {UserRolesEnum, AvailableUserRoles, ProjectStatusEnum} from '../utils/contants.js'
-import mongoose from 'mongoose';
-import e from 'express';
 
+
+// const getProjects = asyncHandler(async (req, res) => {
+//   console.log('=====getProjects controller=====');
+//   try {
+//     const userId = req.user._id;
+//     if (!userId) {
+//       throw new ApiError(401, 'Unauthorized request! Please login first.');
+//     }
+//     const projects = await Project.find({ createdBy: userId }).populate("createdBy");
+//     const projectMembers = await ProjectMember.find({ user: userId })
+//       .populate("project", "_id name description status")
+//       .populate("user", "_id fname email");
+        
+//     if(!projectMembers || projectMembers.length === 0){
+//       console.log('No project members found');
+//       throw new ApiError(404, 'No project members found!');
+//     }
+//     if(!projects || projects.length === 0){
+//       console.log('No projects found');      
+//     }     
+//     const memberRole = projectMembers.map((member)=> member.role === UserRolesEnum.MEMBER);   
+//     const adminRole = projectMembers.map((member)=> member.role === UserRolesEnum.ADMIN || member.role === UserRolesEnum.PROJECT_ADMIN);   
+//     if(memberRole && !adminRole ){
+//       return res.status(200).json(new ApiResponse(200, {
+//         project : projectMembers,
+//       }, 'Assigned projects found successfully!'));
+//     }
+    
+//     return res.status(200).json(new ApiResponse(200, projects, 'Projects found successfully!'));
+//   } catch (error) {
+//     return res.status(400).json(new ApiResponse(400, error.message, 'Projects not found!'));
+//   }
+// });
 const getProjects = asyncHandler(async (req, res) => {
   console.log('=====getProjects controller=====');
   try {
     const userId = req.user._id;
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
-    }
-    const projects = await Project.find({ createdBy: userId }).populate("createdBy");
-        
-    if (!projects || projects.length === 0) {
-      console.log('No projects found');
-      throw new ApiError(404, 'No projects found!');
-    }
+    }    
+    const projectMembers = await ProjectMember.find({ user: userId })
+      .populate("project", "_id name description status createdBy createdAt updatedAt")
+      .populate("user", "_id fname email");
+    if (!projectMembers) {
+      throw new ApiError(404, 'No project members found!');
+    }  
+    const projects = projectMembers.filter((member) => member.project !== null);
+
     return res.status(200).json(new ApiResponse(200, projects, 'Projects found successfully!'));
+
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, error.message, 'Projects not found!'));
   }
@@ -46,8 +80,7 @@ const getProjectById = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         200,        
-        project
-        ,
+        project,
         'Project found successfully!',
       ),
     );
@@ -70,8 +103,15 @@ const createProject = asyncHandler(async (req, res) => {
 
     if (existingProject) {
       throw new ApiError(400, 'Project already exists!');
+    } 
+    const logUser = User.findOne({ _id: userId });
+    if (!logUser) {
+      throw new ApiError(404, 'User not found!');
     }
-
+    if(logUser.role !== UserRolesEnum.ADMIN){
+      throw new ApiError(403, 'You are not authorized to create a project!');
+    }
+    
     const project = await Project.create({
       name,
       description,
@@ -152,10 +192,10 @@ const deleteProject = asyncHandler(async (req, res) => {
   const projectMember = await ProjectMember.findOne({ user: userId, project: id }); 
   
   if (!projectMember || !projectMember.role) {
-    throw new ApiError(403, 'You are not a member of this project or do not have the required role!');
+    throw new ApiError(403, 'You are not authorized to delete this project!');
   }
   
-  if (projectMember.role !== 'project_admin') {
+  if (projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
     throw new ApiError(403, 'You are not authorized to delete this project!');
   }
 
@@ -240,9 +280,9 @@ const getProjectMembers = asyncHandler(async (req, res) => {
   if (!project) {
     throw new ApiError(404, 'Project not found!');
   }
-  if (userId.toString() !== project.createdBy.toString()) {
-    throw new ApiError(403, 'You are not authorized to get members of this project!');
-  }
+  // if (!project.createdBy.equals(userId)) {
+  //   throw new ApiError(403, 'You are not authorized to get members of this project!');
+  // }
   const projectMembers = await ProjectMember.find({ project: projectId }).populate('user');
   if (!projectMembers) {
     throw new ApiError(404, 'Project members could not be found!');
@@ -350,7 +390,6 @@ const updateMemberRole = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, projectMember, 'Project members updated successfully!'));
 });
-
 const deleteMember = asyncHandler(async (req, res) => {
   try {
     console.log("=========deleteMember controller==========");
@@ -402,10 +441,7 @@ const deleteMember = asyncHandler(async (req, res) => {
        
     if (!removeMember || removeMember.deletedCount === 0) {
       throw new ApiError(404, 'Project member could not be found or already deleted!');
-    }   
-    
-    console.log(removeMember);
-    
+    }
     return res
       .status(200)
       .json(new ApiResponse(200, removeMember, 'project members deleted successfully!'));
