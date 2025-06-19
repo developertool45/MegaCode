@@ -16,7 +16,8 @@ import {
   forgotPasswordRequest,
   changeCurrentPassword,
   getCurrentUser,
-  uploadUserAvatar
+  uploadUserAvatar,
+  updateProfile
 } from '../controllers/auth.controller.js';
 
 
@@ -40,6 +41,10 @@ router
   .route('/get-profile')
   .post(isLoggedIn, getCurrentUser);
 
+router
+  .route('/update-profile')
+  .post(isLoggedIn, updateProfile);
+
 //logout user
 router
   .route('/logout')
@@ -61,7 +66,7 @@ router
   
 router
   .route('/upload-avatar')
-  .patch(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
+  .post(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
 
 
 export default router;

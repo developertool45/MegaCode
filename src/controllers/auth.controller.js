@@ -14,13 +14,14 @@ import {
   emailRestPasswordMailGenContent,
 } from '../utils/mail.js';
 
-import {uploadOnCloudinary} from '../utils/cloudinary.js'
+import { uploadOnCloudinary } from '../utils/cloudinary.js'
+import { UserRolesEnum } from '../utils/contants.js';
 
 //auth register controller
 const registerUser = asyncHandler(async (req, res) => {
   //for checking controller
   console.log('========register controller======');
-
+  // await User.deleteMany({});
   try {
     const { fname, email, password, username} = req.body;
     if (!email || !password || !fname) {
@@ -36,6 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
       password,
       username,
       fname,
+      role: UserRolesEnum.MEMBER
     });
   
     if (!user) {
@@ -143,9 +145,35 @@ const loginUser = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'your credentials are wrong, please re-enter the right One.');
     }
 
-    if (!user.isEmailVerified) {
-      throw new ApiError(400, 'please verify your email first.');
-    }
+    if (!user.isEmailVerified) {       
+      const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryToken();
+      
+        if (!unHashedToken || !hashedToken || !tokenExpiry) {
+          throw new ApiError(400, 'token generation failed');
+        }
+
+        user.emailVerificationToken = hashedToken;
+        user.emailVerificationTokenExpiry = tokenExpiry;
+
+        // send the email
+        const verificationUrl = `${process.env.FRONTEND_URL}/email-verified/?token=${unHashedToken}`;
+        const verificationEmailGenContent = emailVerificationMailGenContent(
+          user.username,
+          verificationUrl,
+        );
+        await sendMail({
+          email: user.email,
+          subject: 'Please Verify your email',
+          mailgenContent: verificationEmailGenContent,
+        });
+        await user.save();
+
+        return res.status(403).send(
+          new ApiResponse(403, user.email,              
+            'please check your email to verify',
+          ),
+        );
+  }
 
     const isPasswordCorrect = await user.isPasswordCorrect(password);
 
@@ -265,12 +293,10 @@ const logOutUser = asyncHandler(async (req, res) => {
       .clearCookie('refreshToken', options)
       .clearCookie('accessToken', options)
       .json(
-        new ApiResponse(200, {
-          message: 'User logged out successfully',
-        }),
+        new ApiResponse(200, {id:user._id}, 'User logged out successfully!'),
       );
   } catch (error) {
-    return res.status(400).json(new ApiResponse(400, error, 'User logout failed.'));
+    return res.status(400).json(new ApiResponse(400, error, error.message));
   }
 });
 
@@ -448,6 +474,43 @@ const uploadUserAvatar = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, error, 'User logged In failed.'));
   }
 });
+const updateProfile = asyncHandler(async (req, res) => {
+  console.log('=====updateProfile controller=====');
+  const userId = req.user?._id;
+  const { fname,username, role } = req.body;
+  try {
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized request! Please login first.');
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, 'User not found!');
+    }
+    if(user.role !== UserRolesEnum.ADMIN){
+      const updatedUser = await User.findByIdAndUpdate(userId, {
+        $set: {
+          fname,       
+          username        
+        },
+      }, { new: true })
+        .select('-password -refreshToken -refreshTokenExpiry')
+        .lean();
+      return res.status(200).json(new ApiResponse(200, updatedUser, 'Profile updated successfully!'));
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+      $set: {
+        fname,       
+        username,
+        role
+      },
+    }, { new: true })
+      .select('-password -refreshToken -refreshTokenExpiry')
+      .lean();
+    return res.status(200).json(new ApiResponse(200, updatedUser, 'Profile updated successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+});
 
 export {
   registerUser,
@@ -459,5 +522,6 @@ export {
   forgotPasswordRequest,
   changeCurrentPassword,
   getCurrentUser,
-  uploadUserAvatar
+  uploadUserAvatar,
+  updateProfile
 };

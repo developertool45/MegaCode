@@ -7,9 +7,11 @@ import { TaskStatusEnum, UserRolesEnum } from "../utils/contants.js";
 import { Project } from "../models/project.model.js";
 import { ProjectMember } from "../models/projectmember.models.js";
 import { User } from "../models/user.models.js";
-
+import { SubTask } from "../models/subtask.model.js";
 // create task
 const createTask = asyncHandler(async (req, res) => {
+	// await Task.deleteMany({});
+	// await SubTask.deleteMany({});
 	console.log('=====createTask controller=====');
 	try {
 		const userId = req.user._id
@@ -188,6 +190,10 @@ const deleteTask = asyncHandler(async (req, res) => {
 		const task = await Task.findByIdAndDelete(id, {new: true})
 		if(!task) {
 			throw new ApiError(500, "Error updating task!");
+		}
+		const allSubTasks = await SubTask.deleteMany({ task: id })
+		if(!allSubTasks) {
+			throw new ApiError(500, "Error deleting subtasks!");
 		}
 		return res.status(200).json(
 			new ApiResponse(200, task, "Task updated successfully!")

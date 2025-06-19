@@ -41,6 +41,7 @@ const allSubTasks = asyncHandler(async (req, res) => {
     };
 })
 const createSubTask = asyncHandler(async (req, res) => { 
+  // await SubTask.deleteMany({});
     console.log("======createSubTask controller======");
     const userId = req.user._id;
     const { taskId, projectId } = req.params;
@@ -58,18 +59,19 @@ const createSubTask = asyncHandler(async (req, res) => {
       throw new ApiError(403, 'You are not a member of this project!');
     }
     if (projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
-      throw new ApiError(403, 'You are not authorized to view subtasks!');
+      throw new ApiError(403, 'You are not authorized to create subtasks!');
     }
 
     const task = await Task.find({ _id: taskId });
     if (!task) {
       throw new ApiError(404, 'Task not found!');
     } 
-    const { title, isCompleted} = req.body;
+    const { title, isCompleted, remark } = req.body;
     const subTask = await SubTask.create({
       title,
       task: taskId,      
       isCompleted,
+      remark,
       CreatedBy: userId
     });
     if (!subTask) {
@@ -128,25 +130,32 @@ const updateSubTask = asyncHandler(async (req, res) => {
       }
       if (!id) {
         throw new ApiError(400, 'Please provide a subtask id!');
+      }      
+      const task = await Task.find({ _id: taskId });
+      if (!task) {
+        throw new ApiError(404, 'Task not found!');
+      }
+      const { title, isCompleted, remark } = req.body;
+      console.log(title, isCompleted, remark);
+      
+      if(!title && !isCompleted && !remark) {
+        throw new ApiError(400, 'Please provide at least one field to update!');
       }
       const projectMember = await ProjectMember.findOne({ user: userId, project: projectId });
       if (!projectMember) {
         throw new ApiError(403, 'You are not a member of this project!');
       }
+      // if user is not admin
       if (projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
-        throw new ApiError(403, 'You are not authorized to update subtasks!');
+        const updatedSubTask = await SubTask.findOneAndUpdate({ _id: id }, { isCompleted, remark  }, { new: true });
+
+        if (!updatedSubTask) {
+          throw new ApiError(404, 'Subtask not found!');
+        }
+        return res.status(200).json(new ApiResponse(200, updatedSubTask, 'Subtask updated successfully!'));
       }
-      const task = await Task.find({ _id: taskId });
-      if (!task) {
-        throw new ApiError(404, 'Task not found!');
-      }
-      const { title, isCompleted } = req.body;
-      console.log(title, isCompleted);
-      
-      if(!title && !isCompleted) {
-        throw new ApiError(400, 'Please provide at least one field to update!');
-      }
-      const updatedSubTask = await SubTask.findOneAndUpdate({ _id: id }, { title, isCompleted }, { new: true });
+
+      const updatedSubTask = await SubTask.findOneAndUpdate({ _id: id }, { title, isCompleted, remark }, { new: true });
       if (!updatedSubTask) {
         throw new ApiError(404, 'Subtask not found!');
       }

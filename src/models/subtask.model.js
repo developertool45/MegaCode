@@ -19,6 +19,10 @@ const subTaskSchema = new Schema({
         type: Schema.Types.ObjectId, 
         ref: "User", 
         required: true
+    },
+    remark: {
+        type: String, 
+        trim: true
     }
 }, { timestamps: true });
 
