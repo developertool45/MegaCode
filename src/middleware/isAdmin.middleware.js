@@ -15,7 +15,7 @@ export const isAdmin = asyncHandler(async (req, res, next) => {
 		throw new ApiError(404, "User not found!");
 	}
 	if (user.role !== UserRolesEnum.ADMIN) {
-		throw new ApiError(403, "You are not an admin!");
+		throw new ApiError(403, "You are not Authorized to perform this action!");
 	}
 	next();
 });

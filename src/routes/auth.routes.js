@@ -17,56 +17,23 @@ import {
   changeCurrentPassword,
   getCurrentUser,
   uploadUserAvatar,
-  updateProfile
+  updateProfile,
+  changePasswordLogin
 } from '../controllers/auth.controller.js';
 
 
 //register user
-router
-  .route('/register')
-  .post(userRegisterUserValidator(), validate, registerUser);
-  
-router
-  .route('/verify-email/')
-  .get(VerifyUser);
-router
-  .route('/login')
-  .post(loginUserValidator(), validate, loginUser);
-
-router
-  .route('/verify-email-resend')
-  .post(resendVerificationEmail); 
-
-router
-  .route('/get-profile')
-  .post(isLoggedIn, getCurrentUser);
-
-router
-  .route('/update-profile')
-  .post(isLoggedIn, updateProfile);
-
-//logout user
-router
-  .route('/logout')
-  .get(isLoggedIn, logOutUser);
-//forgot password
-router
-  .route('/forgot-password')
-  .post(forgotPasswordRequest);
-
-//change password
-router
-  .route('/reset-password')
-  .post(changeCurrentPassword);
-
-//refresh token
-router
-  .route('/refresh-token')
-  .post(refreshAccessToken);
-  
-router
-  .route('/upload-avatar')
-  .post(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
-
+router.route('/register').post(userRegisterUserValidator(), validate, registerUser);  
+router.route('/verify-email/').get(VerifyUser);
+router.route('/login').post(loginUserValidator(), validate, loginUser);
+router.route('/verify-email-resend').post(resendVerificationEmail); 
+router.route('/get-profile').post(isLoggedIn, getCurrentUser);
+router.route('/update-profile').post(isLoggedIn, updateProfile);
+router.route('/logout').get(isLoggedIn, logOutUser);
+router.route('/forgot-password').post(forgotPasswordRequest);
+router.route('/reset-password').post(changeCurrentPassword);
+router.route('/refresh-token').post(refreshAccessToken);  
+router.route('/upload-avatar').post(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
+router.route('/change-password').post(isLoggedIn, changePasswordLogin);
 
 export default router;

@@ -13,6 +13,7 @@ import {
 	updateProjectMembers,
 	updateMemberRole,
 	deleteMember,
+	getProjectsWithTasks
 } from '../controllers/project.controller.js';
 
 
@@ -26,5 +27,6 @@ router.route('/project-members/:projectId').post(isLoggedIn, getProjectMembers);
 router.route('/update-project-members/:projectId').post(isLoggedIn, updateProjectMembers);
 router.route('/update-member-role/:projectId/:memberId').post(isLoggedIn, updateMemberRole);
 router.route('/delete-member/:projectId/:memberId').post(isLoggedIn, deleteMember);
-
+//get all projects with tasks
+router.route('/all-projects-with-tasks').get(isLoggedIn, getProjectsWithTasks);
 export default router;

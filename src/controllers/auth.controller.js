@@ -434,7 +434,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const uploadUserAvatar = asyncHandler(async (req, res) => {
-  console.log('=====uploadUserAvatar controller=====');
+  console.log('=====uploadUserAvatar controller====='); 
   const userId = req.user?._id;
   const avatarLocalPath = req.file?.path;
   console.log('local path', avatarLocalPath);
@@ -511,7 +511,35 @@ const updateProfile = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, error, error.message));
   }
 });
-
+const changePasswordLogin = asyncHandler(async (req, res) => {
+  console.log('=====changePasswordLogin controller=====');
+  const userId = req.user?._id;
+  const { oldPassword, newPassword } = req.body;
+  console.log(oldPassword, newPassword);
+  
+  try {
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized request! Please login first.');
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, 'User not found!');
+    }
+    const isMatch = await user.isPasswordCorrect(oldPassword);
+    if (!isMatch) {
+      throw new ApiError(400, 'Old password is wrong.');
+    }
+    user.password = newPassword;
+    await user.save();
+    const updatedUser = await User.findById(userId)
+      .select('-password -refreshToken -refreshTokenExpiry')
+      .lean();
+    
+    return res.status(200).json(new ApiResponse(200, updatedUser, 'Password updated successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
 export {
   registerUser,
   loginUser,
@@ -523,5 +551,6 @@ export {
   changeCurrentPassword,
   getCurrentUser,
   uploadUserAvatar,
-  updateProfile
+  updateProfile,
+  changePasswordLogin
 };

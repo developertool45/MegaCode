@@ -6,6 +6,7 @@ import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
 import { UserRolesEnum, AvailableUserRoles, ProjectStatusEnum } from '../utils/contants.js'
 import mongoose from 'mongoose';
+import { Task } from '../models/task.models.js';
 
 
 // const getProjects = asyncHandler(async (req, res) => {
@@ -452,6 +453,34 @@ const deleteMember = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, error,  error.message));
   }
 });
+const getProjectsWithTasks = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new ApiError(401, 'Unauthorized request! Please login first.');
+  }
+  const user = await User.findById(userId);
+  if(!user){
+    throw new ApiError(404, 'User not found!');
+  }
+  if(user.role !== UserRolesEnum.ADMIN){
+    throw new ApiError(403, 'You are not authorized to access the projects!');
+  }    
+  try {
+    const projects = await Project.find()
+    const AllTasks = await Task.find()
+    const allProjects = [];
+    projects.forEach((project) => {
+      const projectTasks = AllTasks.filter((task) => task.project.equals(project._id));
+      allProjects.push({
+        project,
+        tasks: projectTasks,
+      });
+    });
+    return res.status(200).json(new ApiResponse(200, {allProjects}, 'Projects found successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
 
 export {
   getProjects,
@@ -464,4 +493,5 @@ export {
   updateProjectMembers,
   updateMemberRole,
   deleteMember,
+  getProjectsWithTasks
 };
