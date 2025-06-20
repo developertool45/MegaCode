@@ -15,6 +15,7 @@ import {
 } from '../utils/mail.js';
 
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
+import cloudinary from 'cloudinary'
 import { UserRolesEnum } from '../utils/contants.js';
 
 //auth register controller
@@ -450,7 +451,14 @@ const uploadUserAvatar = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(404, 'User not found!');
     }
-
+    if(user.avatar?.public_id){
+      const result = await cloudinary.uploader.destroy(user.avatar.public_id);      
+      if(!result){
+        throw new ApiError(400, 'Error while deleting avatar');
+      }else{
+        console.log('Avatar deleted successfully');
+      }
+    }
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     if (!avatar?.url) {
       throw new ApiError(400, 'Error while uploading avatar');
@@ -462,16 +470,17 @@ const uploadUserAvatar = asyncHandler(async (req, res) => {
           avatar: {
             url: avatar.url,
             localpath: avatarLocalPath || '',
+            public_id: avatar.public_id || '',
           },
         },
       },
       { new: true },
-    ).select('-password -refreshToken -refreshTokenExpiry');
+    ).select('-password -refreshToken -refreshTokenExpiry').lean();
 
     await user.save();
     return res.status(200).json(new ApiResponse(200, updatedUser, 'Avatar uploaded successfully!'));
   } catch (error) {
-    res.status(400).json(new ApiResponse(400, error, 'User logged In failed.'));
+    res.status(400).json(new ApiResponse(400, error, error.message));
   }
 });
 const updateProfile = asyncHandler(async (req, res) => {

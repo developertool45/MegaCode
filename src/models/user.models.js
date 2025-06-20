@@ -9,10 +9,12 @@ const UserSchema = new Schema(
       type: {
         url: String,
         localpath: String,
+        public_id: String,
       },
       default: {
         url: `https://placehold.co/600x400`,
         localpath: '',
+        public_id: '',
       },
     },
     username: {
