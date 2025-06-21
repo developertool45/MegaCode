@@ -20,20 +20,33 @@ import {
   updateProfile,
   changePasswordLogin
 } from '../controllers/auth.controller.js';
+import rateLimit from 'express-rate-limit';
+import { ApiError } from '../utils/api-errors.js';
+const Limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 mins
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  handler: (req, res, next, options) => {    
+    next(new ApiError(429, " Too many login attempts. Try again in 10 minutes."));
+  },
+});
+
 
 
 //register user
 router.route('/register').post(userRegisterUserValidator(), validate, registerUser);  
 router.route('/verify-email/').get(VerifyUser);
-router.route('/login').post(loginUserValidator(), validate, loginUser);
-router.route('/verify-email-resend').post(resendVerificationEmail); 
+router.route('/login').post(loginUserValidator(), validate, Limiter, loginUser);
+router.route('/verify-email-resend').post(Limiter, resendVerificationEmail); 
 router.route('/get-profile').post(isLoggedIn, getCurrentUser);
-router.route('/update-profile').post(isLoggedIn, updateProfile);
+router.route('/update-profile').post(isLoggedIn,Limiter, updateProfile);
 router.route('/logout').get(isLoggedIn, logOutUser);
-router.route('/forgot-password').post(forgotPasswordRequest);
-router.route('/reset-password').post(changeCurrentPassword);
+router.route('/forgot-password').post(Limiter, forgotPasswordRequest);
+router.route('/reset-password').post(Limiter,changeCurrentPassword);
 router.route('/refresh-token').post(refreshAccessToken);  
-router.route('/upload-avatar').post(isLoggedIn, upload.single('avatar'), uploadUserAvatar);
-router.route('/change-password').post(isLoggedIn, changePasswordLogin);
+router.route('/upload-avatar').post(isLoggedIn,Limiter, upload.single('avatar'), uploadUserAvatar);
+router.route('/change-password').post(isLoggedIn, Limiter, changePasswordLogin);
 
 export default router;

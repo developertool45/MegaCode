@@ -49,8 +49,8 @@ const getProjects = asyncHandler(async (req, res) => {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
     }    
     const projectMembers = await ProjectMember.find({ user: userId })
-      .populate("project", "_id name description status createdBy createdAt updatedAt")
-      .populate("user", "_id fname email");
+      .populate("project", "_id name description status createdBy createdAt updatedAt dueDate")
+      .populate("user", "_id fname email role");
     if (!projectMembers) {
       throw new ApiError(404, 'No project members found!');
     }  
@@ -94,13 +94,16 @@ const createProject = asyncHandler(async (req, res) => {
   console.log('=====createProject controller=====');
   // await Project.deleteMany({});
   // await Project.deleteMany({});
+
   try {
-    const { name, description } = req.body;
+    const { name, description, date } = req.body;
+    console.log(name, description, date);    
+    
     const userId = req.user._id;
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
     }
-    if (!name || !description) {
+    if (!name || !description || !date) {
       throw new ApiError(400, 'Please fill all the fields');
     }
     const user = await User.findById(userId);
@@ -118,6 +121,7 @@ const createProject = asyncHandler(async (req, res) => {
     const project = await Project.create({
       name,
       description,
+      dueDate:new Date(date),
       createdBy: userId,
       status: ProjectStatusEnum.in_progress
     });
@@ -147,9 +151,9 @@ const createProject = asyncHandler(async (req, res) => {
 const updateProject = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { projectId: id } = req.params;
-  const { name, description, status } = req.body;  
+  const { name, description, status, dueDate } = req.body;  
 
-  if (!name || !description) {
+  if (!name || !description || !status || !dueDate) {
     throw new ApiError(400, 'Please fill all the fields');
   }
   if (!id) {
@@ -171,7 +175,7 @@ const updateProject = asyncHandler(async (req, res) => {
 
   const updatedProject = await Project.findByIdAndUpdate(
     id,
-    { name: name, description: description, status: status },
+    { name: name, description: description, status: status, dueDate: new Date(dueDate) },
     { new: true },
   );
   if (!updatedProject) {

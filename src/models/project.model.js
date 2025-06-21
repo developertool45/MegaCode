@@ -20,6 +20,11 @@ const projectSchema = new Schema(
       enum: AvailableProjectStatus,
       default: ProjectStatusEnum.in_progress,
     },
+    dueDate: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User", 

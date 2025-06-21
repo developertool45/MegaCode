@@ -3,6 +3,7 @@ const app = express();
 import cookieParser from 'cookie-parser';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 
 // import routes
@@ -27,6 +28,16 @@ app.use(express.static('public'));
 //cookie parser
 app.use(cookieParser())
 
+
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // max 100 requests per IP
+	message: "⚠️ Too many requests from this IP, please try again later.",
+	standardHeaders: true,
+	legacyHeaders: false,
+  });
+  
+app.use(limiter);
 
 // all routes
 app.use('/api/v1/healthcheck', healthCheck);
