@@ -5,7 +5,6 @@ import { ApiError } from '../utils/api-errors.js';
 import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
 import { UserRolesEnum, AvailableUserRoles, ProjectStatusEnum } from '../utils/contants.js'
-import mongoose from 'mongoose';
 import { Task } from '../models/task.models.js';
 
 
@@ -74,7 +73,7 @@ const getProjectById = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Unauthorized request! Please login first.');
   }
   try {
-    const project = await Project.findById({ _id: projectId }).populate("createdBy", 'fname username email');
+    const project = await Project.findById({ _id: projectId }).populate("createdBy", '_id fname username email');
     if (!project) {
       throw new ApiError(404, 'Project not found!');
     }
@@ -129,7 +128,7 @@ const createProject = asyncHandler(async (req, res) => {
     if (!project) {
       throw new ApiError(400, 'Project could not be created!');
     }
-    const projectPopulated = await Project.findById(project._id).populate('createdBy', 'fname username email');
+    const projectPopulated = await Project.findById(project._id).populate('createdBy', 'fname username email role');
     if(!projectPopulated){
       throw new ApiError(400, 'Project could not be created!');
     }
@@ -177,7 +176,7 @@ const updateProject = asyncHandler(async (req, res) => {
     id,
     { name: name, description: description, status: status, dueDate: new Date(dueDate) },
     { new: true },
-  );
+  ).select('refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry');
   if (!updatedProject) {
     throw new ApiError(400, 'Project could not be updated!');
   }
@@ -263,7 +262,9 @@ const addMemberToProject = asyncHandler(async (req, res) => {
     user: user._id,
     project: projectId,
     role: UserRolesEnum.MEMBER,
-  });
+  }) 
+    .select('refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry')
+    .lean();
 
   if (!projectMember) {
     throw new ApiError(400, 'Project member could not be created!');
@@ -290,7 +291,7 @@ const getProjectMembers = asyncHandler(async (req, res) => {
   // if (!project.createdBy.equals(userId)) {
   //   throw new ApiError(403, 'You are not authorized to get members of this project!');
   // }
-  const projectMembers = await ProjectMember.find({ project: projectId }).populate('user');
+  const projectMembers = await ProjectMember.find({ project: projectId }).populate('user', '_id fname email ');
   if (!projectMembers) {
     throw new ApiError(404, 'Project members could not be found!');
   }
@@ -312,7 +313,7 @@ const updateProjectMembers = asyncHandler(async (req, res) => {
   if (!project) {
     throw new ApiError(404, 'Project not found!');
   }
-  if (userId.toString() !== project.createdBy.toString()) {
+  if (!project.createdBy.equals(userId)) {
     throw new ApiError(403, 'You are not authorized to update members of this project!');
   }
 
@@ -324,7 +325,7 @@ const updateProjectMembers = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Project members could not be found!');
   }
 
-  if (projectMember.role !== 'admin') {
+  if (projectMember.role !== UserRolesEnum.ADMIN) {
     throw new ApiError(403, 'You are not authorized to update members of this project!');
   }
 
@@ -335,7 +336,7 @@ const updateProjectMembers = asyncHandler(async (req, res) => {
       description,
     },
     { new: true },
-  );
+  ).select('refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry')
   if (!updateProject) {
     throw new ApiError(404, 'Project members could not be updated!');
   }
@@ -390,12 +391,26 @@ const updateMemberRole = asyncHandler(async (req, res) => {
   if (!role) {
     throw new ApiError(400, 'Please provide a role!');
   }
-  projectMember.role = role;
-  await projectMember.save();
+  const updateRole = await ProjectMember.findOneAndUpdate(
+    {
+      project: projectId,
+      user: memberId,
+    },
+    {
+      role,
+    },
+    { new: true },
+  );
+  if (!updateRole) {
+    throw new ApiError(404, 'Project members could not be updated!');
+  }
+  const populatedMember = await ProjectMember.findById(updateRole._id)
+    .populate('user', '_id fname email role')
 
+  
   return res
     .status(200)
-    .json(new ApiResponse(200, projectMember, 'Project members updated successfully!'));
+    .json(new ApiResponse(200, populatedMember, 'Project members updated successfully!'));
 });
 const deleteMember = asyncHandler(async (req, res) => {
   try {

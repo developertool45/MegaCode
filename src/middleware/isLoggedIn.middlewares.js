@@ -7,7 +7,7 @@ import { options } from '../utils/contants.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
 export const isLoggedIn = asyncHandler(async (req, res, next) => {
-  const accessToken = req.cookies?.accessToken;
+  const accessToken = req.cookies?.accessToken || req.headers.authorization?.replace('Bearer ', '');
   const refreshToken = req.cookies?.refreshToken;
   // console.log('accessToken', accessToken);
   // console.log('refreshToken', refreshToken);
@@ -39,7 +39,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
       return res.status(400).json(new ApiError(400, 'Please Login again.'));
     }
 
-    return res.status(400).json(new ApiError(400, 'Please Login again,your token got expired.'));
+    return res.status(401).json(new ApiError(401, 'Please Login again,your token got expired.'));
   } else {
     const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     const userId = decoded._id;

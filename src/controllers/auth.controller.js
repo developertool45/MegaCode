@@ -214,8 +214,10 @@ const loginUser = asyncHandler(async (req, res) => {
             username: loggedInUser.username,
             fname: loggedInUser.fname,
             id: loggedInUser._id,
-            token: accessToken,
+            role: loggedInUser.role,
+            accessToken, refreshToken,
           },
+          
           'User logged In Successfully',
         ),
       );
@@ -356,7 +358,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Password is required');
     }
 
-    const hashToken = await crypto.createHash('sha256').update(token).digest('hex');
+    const hashToken = crypto.createHash('sha256').update(token).digest('hex');
   
     const user = await User.findOne({
       passwordResetToken: hashToken,
@@ -541,7 +543,7 @@ const changePasswordLogin = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save();
     const updatedUser = await User.findById(userId)
-      .select('-password -refreshToken -refreshTokenExpiry')
+      .select('-password -refreshToken -refreshTokenExpiry -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry  avatar.localpath avatar.public_id')
       .lean();
     
     return res.status(200).json(new ApiResponse(200, updatedUser, 'Password updated successfully!'));

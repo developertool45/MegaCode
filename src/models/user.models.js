@@ -41,7 +41,7 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
       required: true,
-      minLengh: 6,
+      minLengh: 6,      
     },
     isEmailVerified: {
       type: Boolean,
@@ -62,27 +62,31 @@ const UserSchema = new Schema(
     emailVerificationToken: {
       type: String,
       trim: true,
+      
     },
     emailVerificationTokenExpiry: {
       type: Date,
+      
     },
     refreshToken: {
       type: String,
-      trim: true,
+      trim: true,      
     },
     refreshTokenExpiry: {
-      type:Date
+      type: Date,
+      
     },
     passwordResetToken: {
       type: String,
-      trim: true,
+      trim: true,      
     },
     passwordResetTokenExpiry: {
-      type: Date,
+      type: Date,     
     },
   },
   { timestamps: true },
 );
+
 
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

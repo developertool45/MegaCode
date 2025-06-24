@@ -1,7 +1,15 @@
 import { Router } from 'express';
 import { validate } from '../middleware/validator.middleware.js';
-import { userRegisterUserValidator, loginUserValidator } from '../validators/index.js';
 import { upload } from '../middleware/multer.middleware.js';
+
+import {
+  userRegisterUserValidator,
+  loginUserValidator,
+  resendVerificationValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+  updateProfileValidator,
+  changePasswordValidator } from '../validators/index.js';
 const router = Router();
 
 //login middleware
@@ -20,6 +28,7 @@ import {
   updateProfile,
   changePasswordLogin
 } from '../controllers/auth.controller.js';
+
 import rateLimit from 'express-rate-limit';
 import { ApiError } from '../utils/api-errors.js';
 const Limiter = rateLimit({
@@ -34,19 +43,18 @@ const Limiter = rateLimit({
 });
 
 
-
 //register user
 router.route('/register').post(userRegisterUserValidator(), validate, registerUser);  
 router.route('/verify-email/').get(VerifyUser);
 router.route('/login').post(loginUserValidator(), validate, Limiter, loginUser);
-router.route('/verify-email-resend').post(Limiter, resendVerificationEmail); 
+router.route('/verify-email-resend').post(Limiter,resendVerificationValidator(), validate, resendVerificationEmail); 
 router.route('/get-profile').post(isLoggedIn, getCurrentUser);
-router.route('/update-profile').post(isLoggedIn,Limiter, updateProfile);
+router.route('/update-profile').post(isLoggedIn,Limiter, updateProfileValidator(), validate, updateProfile);
 router.route('/logout').get(isLoggedIn, logOutUser);
-router.route('/forgot-password').post(Limiter, forgotPasswordRequest);
-router.route('/reset-password').post(Limiter,changeCurrentPassword);
+router.route('/forgot-password').post(Limiter,forgotPasswordValidator(), validate, forgotPasswordRequest);
+router.route('/reset-password').post(Limiter, resetPasswordValidator(), validate, changeCurrentPassword);
 router.route('/refresh-token').post(refreshAccessToken);  
 router.route('/upload-avatar').post(isLoggedIn,Limiter, upload.single('avatar'), uploadUserAvatar);
-router.route('/change-password').post(isLoggedIn, Limiter, changePasswordLogin);
+router.route('/change-password').post(isLoggedIn, Limiter, changePasswordValidator(), validate, changePasswordLogin);
 
 export default router;

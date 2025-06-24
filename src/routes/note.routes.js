@@ -9,16 +9,27 @@ import {
 import { isLoggedIn } from '../middleware/isLoggedIn.middlewares.js';
 import { isAdmin } from '../middleware/isAdmin.middleware.js';
 
+import {
+    createNoteValidator,
+  updateNoteValidator,
+} from '../validators/index.js';
+
+import { validate } from '../middleware/validator.middleware.js';
  
+
+router.route("/notes").get(isLoggedIn, getNotes);
 router
-    .route('/project-note/:projectId/:noteId')
-    .post(isLoggedIn,isAdmin, createNote)    
-    .delete(isLoggedIn, isAdmin, deleteNote)
+.route("/create-note/:projectId")
+.post(isLoggedIn, isAdmin, createNoteValidator(), validate, createNote);
+
+router.route("/notes/:projectId").get(isLoggedIn, getNotes);
 router
-    .route('/update-note/:projectId/:noteId')
-    .patch(isLoggedIn, isAdmin, updateNote)  
-     
-router.route('/notes/:projectId')
-    .get(isLoggedIn, getNotes);
+  .route("/delete-note/:projectId/:noteId")
+  .post(isLoggedIn, isAdmin, deleteNote); // No body validation needed
+
+router
+  .route("/update-note/:projectId/:noteId")
+  .post(isLoggedIn, isAdmin, updateNoteValidator(), validate, updateNote);
+
 
 export default router;
