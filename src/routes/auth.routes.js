@@ -38,7 +38,7 @@ import { ApiError } from '../utils/api-errors.js';
 
 const Limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
-  max: 10,
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
 
