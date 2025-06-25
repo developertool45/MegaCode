@@ -177,9 +177,10 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
     const isPasswordCorrect = await user.isPasswordCorrect(password);
-
+    console.log("isPasswordCorrect", isPasswordCorrect);
+    
     if (!isPasswordCorrect) {
-      throw new ApiError(400, 'password is wrong.');
+      throw new ApiError(400, 'Entered password is wrong.');
     }
 
     if (!user.isEmailVerified) {
@@ -349,7 +350,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   try {
     const { password, token } = req.body;
     // const token = req.query?.token;
-    console.log("token",token);
+    console.log("token",token , "password", password);
     
     if (!token) {
       throw new ApiError(400, 'Token is required');
@@ -358,12 +359,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Password is required');
     }
 
-    const hashToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashToken = await crypto.createHash('sha256').update(token).digest('hex');
   
     const user = await User.findOne({
       passwordResetToken: hashToken,
       passwordResetTokenExpiry: { $gt: Date.now() },
-    }).select(' -refreshToken -refreshTokenExpiry');
+    });
 
     if (!user) {
       throw new ApiError(400, 'Token is invalid or has expired');
@@ -384,7 +385,8 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         id: user._id,
-      },'Password reset successfully!'));
+      }, 'Password reset successfully!, please login with your new password'),
+    );
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, error, error.message));
   }
@@ -543,10 +545,106 @@ const changePasswordLogin = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save();
     const updatedUser = await User.findById(userId)
-      .select('-password -refreshToken -refreshTokenExpiry -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry  avatar.localpath avatar.public_id')
-      .lean();
+      .select('-password -refreshToken -refreshTokenExpiry')
+        
+    return res.status(200).json(new ApiResponse(200, {
+      id: updatedUser._id, email: updatedUser.email, role: updatedUser.role
+    },
+      'Password updated successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
+const getAllUsers = asyncHandler(async (req, res) => {
+  console.log('=====getAllUsers controller=====');
+  const userId = req.user?._id;
+  if (!userId) throw new ApiError(401, 'Unauthorized request! Please login first.');
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found!');
+  if (user.role !== UserRolesEnum.ADMIN) {
+    throw new ApiError(401, 'you are not authorized !');
+  }  
+  try {
+    const users = await User.find().select(' -isEmailVerified -password -refreshToken -refreshTokenExpiry -emailVerificationTokenExpiry -verificationToken -emailResetToken -emailResetTokenExpiry -avatar.public_id -avatar.localpath').lean();
+    // const findedUsers = users.filter(user => user.role !== UserRolesEnum.ADMIN);
+    return res.status(200).json(new ApiResponse(200,  
+      users
+    , 'Users found successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
+const promoteToAdmin = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { id } = req.params;
+  if (!userId) throw new ApiError(401, 'Unauthorized request! Please login first.');
+  if(!id) throw new ApiError(400, 'User id is required');
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found!');
+  if (user.role !== UserRolesEnum.ADMIN) {
+    throw new ApiError(401, 'you are not authorized !');
+  }  
+  try {
+    const updatedUser = await User.findByIdAndUpdate(id, {
+      $set: {
+        role: UserRolesEnum.ADMIN
+      },
+    }, { new: true })
+      .select(' -isEmailVerified -password -refreshToken -refreshTokenExpiry -emailVerificationTokenExpiry -verificationToken -emailResetToken -emailResetTokenExpiry -avatar.public_id -avatar.localpath')
+      .lean()
+    return res.status(200).json(new ApiResponse(200, updatedUser, 'User promoted to admin successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
+const promoteToUser = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { id } = req.params;
+  if (!userId) throw new ApiError(401, 'Unauthorized request! Please login first.');
+  if(!id) throw new ApiError(400, 'User id is required');
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found!');
+  if (user.role !== UserRolesEnum.ADMIN) {
+    throw new ApiError(401, 'you are not authorized !');
+  }  
+  try {
+    const updatedUser = await User.findByIdAndUpdate(id, {
+      $set: {
+        role: UserRolesEnum.MEMBER
+      },
+    }, { new: true })
+      .select(' -isEmailVerified -password -refreshToken -refreshTokenExpiry -emailVerificationTokenExpiry -verificationToken -emailResetToken -emailResetTokenExpiry -avatar.public_id -avatar.localpath')
+      .lean()
     
-    return res.status(200).json(new ApiResponse(200, updatedUser, 'Password updated successfully!'));
+    return res.status(200).json(new ApiResponse(200, updatedUser, 'User promoted to user successfully!'));
+  } catch (error) {
+    res.status(400).json(new ApiResponse(400, error, error.message));
+  }
+})
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { id } = req.params;
+  if (!userId) throw new ApiError(401, 'Unauthorized request! Please login first.');
+  if(!id) throw new ApiError(400, 'User id is required');
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found!');
+  if (user.role !== UserRolesEnum.ADMIN) {
+    throw new ApiError(401, 'you are not authorized !');
+  }  
+  try {
+    const findDeletedUser = await User.findById(id);
+    if (!findDeletedUser) {
+      throw new ApiError(404, 'User not found!');
+    }
+    if(findDeletedUser.role === UserRolesEnum.ADMIN) {
+      throw new ApiError(400, 'Admin user cannot be deleted!');
+    }
+    const deletedUser = await User.findByIdAndDelete(id);
+    if(!deletedUser) {
+      throw new ApiError(404, 'User not deleted!');
+    }
+    return res.status(200).json(new ApiResponse(200, deletedUser, 'User deleted successfully!'));
   } catch (error) {
     res.status(400).json(new ApiResponse(400, error, error.message));
   }
@@ -563,5 +661,9 @@ export {
   getCurrentUser,
   uploadUserAvatar,
   updateProfile,
-  changePasswordLogin
+  changePasswordLogin,
+  getAllUsers,
+  promoteToAdmin,
+  promoteToUser,
+  deleteUser
 };

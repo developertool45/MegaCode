@@ -41,7 +41,7 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
       required: true,
-      minLengh: 6,      
+      minLength: 6,      
     },
     isEmailVerified: {
       type: Boolean,
@@ -89,7 +89,7 @@ const UserSchema = new Schema(
 
 
 UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) return 
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });

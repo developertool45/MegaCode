@@ -67,8 +67,13 @@ const forgotPasswordValidator = () => [
 // 🔐 Reset Password
 const resetPasswordValidator = () => [
   body("password")
-    .notEmpty().withMessage("New password is required")
-    .isLength({ min: 6, max: 20 }).withMessage("Password must be 6-20 characters long"),
+    .notEmpty().withMessage("New password is required")    
+    .isLength({ min: 4 })
+    .withMessage('Password must be at least 8 characters long')
+    .isLength({ max: 16 })
+    .withMessage('Password must be at most 16 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
+    .withMessage("Password must contain at least one uppercase, one lowercase letter and one number")
 ];
 
 // 🔄 Update Profile
@@ -87,7 +92,12 @@ const changePasswordValidator = () => [
     .notEmpty().withMessage("oldPassword password is required"),
   body("newPassword")
     .notEmpty().withMessage("New password is required")
-    .isLength({ min: 6, max: 20 }).withMessage("Password must be 6-20 characters long"),
+    .isLength({ min: 4 })
+    .withMessage('Password must be at least 8 characters long')
+    .isLength({ max: 16 })
+    .withMessage('Password must be at most 16 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
+    .withMessage("Password must contain at least one uppercase, one lowercase letter and one number")
 ];
 
 

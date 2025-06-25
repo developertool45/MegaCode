@@ -176,13 +176,19 @@ const updateProject = asyncHandler(async (req, res) => {
     id,
     { name: name, description: description, status: status, dueDate: new Date(dueDate) },
     { new: true },
-  ).select('refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry');
+  );
   if (!updatedProject) {
     throw new ApiError(400, 'Project could not be updated!');
   }
   await project.save();
 
-  return res.status(200).json(new ApiResponse(200, updatedProject, 'Project updated successfully!'));
+  return res.status(200).json(new ApiResponse(200, {
+    id: updatedProject._id,
+    name: updatedProject.name,
+    description: updatedProject.description,
+    status: updatedProject.status,
+    dueDate: updatedProject.dueDate
+  }, 'Project updated successfully!'));
 });
 const deleteProject = asyncHandler(async (req, res) => {
   const userId = req.user._id;
