@@ -17,12 +17,12 @@ import {
 import { validate } from '../middleware/validator.middleware.js';
  
 
-router.route("/notes").get(isLoggedIn, getNotes);
+router.route("/notes/:projectId").get(isLoggedIn, getNotes);
 router
 .route("/create-note/:projectId")
 .post(isLoggedIn, isAdmin, createNoteValidator(), validate, createNote);
 
-router.route("/notes/:projectId").get(isLoggedIn, getNotes);
+router.route("/get-note/:projectId/:noteId").get(isLoggedIn, getNotes);
 router
   .route("/delete-note/:projectId/:noteId")
   .post(isLoggedIn, isAdmin, deleteNote); // No body validation needed

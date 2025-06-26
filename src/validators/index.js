@@ -213,17 +213,17 @@ const updateSubtaskValidator = () => [
 
 // ✅ Create Note Validator
 const createNoteValidator = () => [
-  body("title")
+  body("name")
     .notEmpty()
-    .withMessage("Note title is required")
+    .withMessage("Note name is required")
     .isLength({ min: 2, max: 100 })
-    .withMessage("Title must be 2 to 100 characters"),
+    .withMessage("name must be 2 to 100 characters"),
 
   body("content")
     .notEmpty()
     .withMessage("Note content is required")
-    .isLength({ min: 5 })
-    .withMessage("Content must be at least 5 characters long")
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Content must be at least 3 characters long")
 ];
 
 // ✅ Update Note Validator

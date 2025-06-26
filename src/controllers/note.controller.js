@@ -5,11 +5,12 @@ import { Project } from "../models/project.model.js";
 import { ProjectMember } from "../models/projectmember.models.js";
 import { ProjectNote }  from "../models/note.models.js";
 import { User } from "../models/user.models.js";
+import { UserRolesEnum } from "../utils/contants.js";
 
 const createNote = asyncHandler(async (req, res) => {
 	const userId = req.user._id;
 	const { projectId } = req.params;
-	const { content } = req.body;
+	const { name, content } = req.body;	
 
 	if (!userId) {
 		throw new ApiError(401, "Unauthorized request! Please login first.");
@@ -17,7 +18,7 @@ const createNote = asyncHandler(async (req, res) => {
 	if (!projectId) {
 		throw new ApiError(400, "Please provide a project id!");
 	}
-	if (!content) {
+	if (!content && !name) {
 		throw new ApiError(400, "Please provide content for the note!");    
 	}
 	const project = await Project.findById(projectId);
@@ -28,27 +29,30 @@ const createNote = asyncHandler(async (req, res) => {
 	if (!user) {
 		throw new ApiError(404, "User not found!");
 	}
-	if(userId.toString() !== project.createdBy.toString()) {
+	if(!project.createdBy.equals(userId)) {
 		const projectMember = await ProjectMember.findOne({ user: userId, project: projectId });
 		if (!projectMember) {
 			throw new ApiError(403, "You are not a member of this project!");
 		}
 	}
-	const existingNote = await ProjectNote.findOne({ project: projectId, createdBy: userId, content });
+	const existingNote = await ProjectNote.findOne({ name });
 	if (existingNote) {
 		throw new ApiError(400, "Note already exists!");
 	}
-	const note = await ProjectNote.create({ project: projectId, createdBy: userId, content });
+	const note = await ProjectNote.create({
+		project: projectId, createdBy: userId, name, content
+	});
 	if (!note) {
 		throw new ApiError(500, "Error creating note!");
 	}
+	
 	return res.status(200).json(new ApiResponse(200, note, "Note created successfully!"));
 
 })
 const updateNote = asyncHandler(async (req, res) => {
 	const userId = req.user._id;
 	const { projectId, noteId } = req.params;	
-	const { content } = req.body;
+	const { name, content } = req.body;
 
 	console.log("=====updateNote controller=====", projectId, noteId, content);
 	if (!userId) {
@@ -72,26 +76,27 @@ const updateNote = asyncHandler(async (req, res) => {
 	if (!user) {
 		throw new ApiError(404, "User not found!");
 	}
-	if (userId.toString() !== project.createdBy.toString()) {
+	if (!project.createdBy.equals(userId)) {
 		throw new ApiError(403, "You are not authorized to update this note!");
 	}
 	const projectMember = await ProjectMember.findOne({ user: userId, project: projectId });
 	if (!projectMember) {
 		throw new ApiError(403, "You are not a member of this project!");
-	}	
-	if(projectMember.role !== "admin") {
+	}
+	console.log("projectMember", projectMember);
+	
+	if(projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
 		throw new ApiError(403, "You are not authorized to update this note!");
 	}
 	const note = await ProjectNote.findById(noteId);
-
 	if (!note) {
 		throw new ApiError(404, "Note not found!");
 	}
-	note.content = content;
-	const updatedNote = await note.save();
-	
-	console.log("updatedNote", updatedNote);
-	
+	if (!note.createdBy.equals(userId)) {
+		throw new ApiError(403, "You are not authorized to update this note!");
+	}
+	const updatedNote = await ProjectNote.findByIdAndUpdate(noteId, { name, content }, { new: true }).populate("createdBy", "_id fname email");
+
 	if (!updatedNote) {
 		throw new ApiError(500, "Error updating note!");
 	}	
@@ -121,14 +126,14 @@ const deleteNote = asyncHandler(async (req, res) => {
 	if (!user) {
 		throw new ApiError(404, "User not found!");
 	}
-	if (userId.toString() !== project.createdBy.toString()) {
+	if (!project.createdBy.equals(userId)) {
 		throw new ApiError(403, "You are not authorized to update this note!");
 	}
 	const projectMember = await ProjectMember.findOne({ user: userId, project: projectId });
 	if (!projectMember) {
 		throw new ApiError(403, "You are not a member of this project!");
 	}	
-	if(projectMember.role !== "admin") {
+	if(projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
 		throw new ApiError(403, "You are not authorized to update this note!");
 	}
 	const note = await ProjectNote.findByIdAndDelete(noteId);
@@ -156,13 +161,13 @@ const getNotes = asyncHandler(async (req, res) => {
 	if (!user) {
 		throw new ApiError(404, "User not found!");
 	}
-	if(userId.toString() !== project.createdBy.toString()) {
+	if(!project.createdBy.equals(userId)) {
 		const projectMember = await ProjectMember.findOne({ user: userId, project: projectId });
 		if (!projectMember) {
 			throw new ApiError(403, "You are not a member of this project!");
 		}
 	}
-	const notes = await ProjectNote.find({ project: projectId });
+	const notes = await ProjectNote.find({ project: projectId }).populate("createdBy", " fname email _id");
 
 	return res.status(200).json(new ApiResponse(200, notes, "Notes fetched successfully!"));
 })
