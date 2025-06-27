@@ -76,4 +76,27 @@ const emailRestPasswordMailGenContent = (username, resetPasswordUrl) => {
   };
 };
 
-export { sendMail, emailVerificationMailGenContent, emailRestPasswordMailGenContent };
+const projectAssignMailGenContent = (username, assignedUrl) => {
+  return {
+    body: {
+      name: username,
+      intro: "You have been assigned to a new project",
+      action: {
+        instructions: 'Click the button below to access the project, pleae signup if you haven\'t. account already.',
+        button: {
+          color: '#DC4D2F', // Optional action button color
+          text: 'Access the project',
+          link: assignedUrl,
+        },
+      },
+      outro: "Need help, or have questions? Just reply to this email, we'd love to help.",
+    },
+  };
+        }
+
+export {
+  sendMail,
+  emailVerificationMailGenContent,
+  emailRestPasswordMailGenContent,
+  projectAssignMailGenContent
+};

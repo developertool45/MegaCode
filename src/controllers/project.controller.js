@@ -1,11 +1,16 @@
+import mongoose from 'mongoose';
 import { asyncHandler } from '../utils/async-handler.js';
 import { Project } from '../models/project.model.js';
 import ApiResponse from '../utils/api-response.js';
 import { ApiError } from '../utils/api-errors.js';
+import { UserRolesEnum, AvailableUserRoles, ProjectStatusEnum } from '../utils/contants.js'
+//import models
 import { User } from '../models/user.models.js';
 import { ProjectMember } from '../models/projectmember.models.js';
-import { UserRolesEnum, AvailableUserRoles, ProjectStatusEnum } from '../utils/contants.js'
 import { Task } from '../models/task.models.js';
+import { ProjectNote } from '../models/note.models.js';
+import { SubTask } from '../models/subtask.model.js';
+import { sendMail, projectAssignMailGenContent } from '../utils/mail.js';
 
 
 // const getProjects = asyncHandler(async (req, res) => {
@@ -47,7 +52,7 @@ const getProjects = asyncHandler(async (req, res) => {
     if (!userId) {
       throw new ApiError(401, 'Unauthorized request! Please login first.');
     }    
-    const projectMembers = await ProjectMember.find({ user: userId })
+    const projectMembers = await ProjectMember.find({ user: userId }).lean()
       .populate("project", "_id name description status createdBy createdAt updatedAt dueDate")
       .populate("user", "_id fname email role");
     if (!projectMembers) {
@@ -192,17 +197,17 @@ const updateProject = asyncHandler(async (req, res) => {
 });
 const deleteProject = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const { projectId: id } = req.params; 
-  
+  const { projectId } = req.params; 
+  const id = new mongoose.Types.ObjectId(projectId);
   if (!userId) {
     throw new ApiError(401, 'Unauthorized request! Please login first.');
   }
   if (!id) {
     throw new ApiError(400, 'Please provide a project id!');
   }
-  console.log("userId",userId, "id",id);
+  console.log("userId", userId, "id",id);
     
-  const projectMember = await ProjectMember.findOne({ user: userId, project:id }); 
+  const projectMember = await ProjectMember.findOne({ user: userId, project: id}); 
  
   if (!projectMember) {
     throw new ApiError(404, 'Project members could not be found!');
@@ -210,17 +215,20 @@ const deleteProject = asyncHandler(async (req, res) => {
   if (projectMember.role !== UserRolesEnum.PROJECT_ADMIN) {
     throw new ApiError(403, 'You are not authorized to delete this project!');
   }
+  try { 
+    await Promise.all([
+      ProjectNote.deleteMany({ project: id, createdBy: userId }),
+      SubTask.deleteMany({ task: { $in: await Task.find({ project: id }) } }),
+      Task.deleteMany({ project: id }),
+      ProjectMember.deleteMany({ project: id }),
+    ]).catch((error) => {
+      throw new ApiError(500, error, error.message);
+    })
 
-  try {
     const projectDelete = await Project.findByIdAndDelete(id);
     if (!projectDelete) {
       throw new ApiError(404, 'Project could not be deleted!');
-    }
-
-    const deletedMembers = await ProjectMember.deleteMany({ project: id }, { new: true });
-    if (!deletedMembers || deletedMembers.deletedCount === 0) {
-      throw new ApiError(404, 'Project members could not be deleted!');
-    }
+    }    
 
     return res.status(200).json(new ApiResponse(200, projectDelete, 'Project deleted successfully!'));
   } catch (error) {
@@ -268,14 +276,29 @@ const addMemberToProject = asyncHandler(async (req, res) => {
     user: user._id,
     project: projectId,
     role: UserRolesEnum.MEMBER,
-  }) 
-    .select('refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry -emailResetToken -emailResetTokenExpiry')
-    .lean();
-
+  });
+    
+  // send the email
+      const assignedUrl = `${process.env.FRONTEND_URL}/login`;
+      const projectAssigned = projectAssignMailGenContent(
+        user.username || user.fname,
+        assignedUrl     
+      );
+  
+    await sendMail({
+        email: email,
+        subject: 'Project assigned to you!',
+        mailgenContent: projectAssigned,
+    });
+    
+  
   if (!projectMember) {
     throw new ApiError(400, 'Project member could not be created!');
   }
- 
+  
+
+
+
   return res
     .status(200)
     .json(new ApiResponse(200,  projectMember , 'Member added to project successfully!'));
