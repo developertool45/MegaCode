@@ -41,8 +41,8 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
       required: true,
-      minLength: 6,      
-    },
+      minLength: 6, 
+      },
     isEmailVerified: {
       type: Boolean,
       default: false,

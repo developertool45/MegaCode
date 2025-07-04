@@ -11,7 +11,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
   // console.log('accessToken', accessToken);
   // console.log('refreshToken', refreshToken);
-  console.log("=======isLoggedIn middleware=======");
+  // console.log("=======isLoggedIn middleware=======");
 
   if (!accessToken) {
     if (refreshToken) {
