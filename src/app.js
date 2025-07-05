@@ -20,7 +20,7 @@ import subTasksRoutes from './routes/subTasks.routes.js';
 const whitelist = [
 	process.env.CORS_ORIGIN, 	                 
 	'http://localhost:5173',
-];
+].filter(Boolean);
   
 const corsOptions = {
 	origin(origin, callback) {
@@ -34,8 +34,8 @@ const corsOptions = {
 	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 	credentials: true
 };
-app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
   
 // app.use(cors({
