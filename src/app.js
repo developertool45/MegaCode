@@ -34,6 +34,14 @@ const corsOptions = {
 	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 	credentials: true
 };
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+
+app.use((req, res, next) => {
+	console.log('🔥 Origin:', req.headers.origin);
+	next();
+});
   
 // app.use(cors({
 // 	// origin: [process.env.CORS_ORIGIN || "http://localhost:5173"],
@@ -46,8 +54,7 @@ const corsOptions = {
 // 	credentials: true
 // }));
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+
   
 // middleware for form and json data
 app.use(express.json({limit: '10kb'}));
