@@ -38,12 +38,12 @@ import { ApiError } from '../utils/api-errors.js';
 
 const Limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
-  max: 15,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
 
   handler: (req, res, next, options) => {    
-    next(new ApiError(429, " Too many login attempts. Try again in 10 minutes."));
+    next(new ApiError(429, ' Too many login attempts. Try again in 10 minutes.'));
   },
 });
 
