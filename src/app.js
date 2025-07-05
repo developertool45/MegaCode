@@ -23,25 +23,30 @@ const whitelist = [
 ];
   
 const corsOptions = {
-	origin: (origin, callback) => {
-		if (whitelist.includes(origin) || !origin) {
-			callback(null, true);
-		} else {
-			callback(new Error('Not allowed by CORS'));
-		}
+	origin(origin, callback) {
+	  if (!origin || whitelist.includes(origin)) {
+		callback(null, true);
+	  } else {
+		callback(new Error('Not allowed by CORS'));
+	  }
 	},
-}
-app.use(cors({
-	// origin: [process.env.CORS_ORIGIN || "http://localhost:5173"],
-	origin(origin, cb) {		
-		if (!origin || whitelist.includes(origin)) return cb(null, true);
-		return cb(new Error('Not allowed by CORS'));
-	  },
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 	credentials: true
-}));
+};
+  
+// app.use(cors({
+// 	// origin: [process.env.CORS_ORIGIN || "http://localhost:5173"],
+// 	origin(origin, cb) {
+// 		if (!origin || whitelist.includes(origin)) return cb(null, true);
+// 		return cb(new Error('Not allowed by CORS'));
+// 	  },
+// 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+// 	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+// 	credentials: true
+// }));
 
+app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
   
 // middleware for form and json data
