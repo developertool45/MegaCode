@@ -42,7 +42,7 @@ const Limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  handler: (req, res, next, options) => {    
+  handler: (req, res, next, options) => {
     next(new ApiError(429, ' Too many login attempts. Try again in 10 minutes.'));
   },
 });

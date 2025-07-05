@@ -17,38 +17,19 @@ import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
 import subTasksRoutes from './routes/subTasks.routes.js';
 
-const whitelist = [
-	process.env.CORS_ORIGIN, 	                 
-	'http://localhost:5173',
-].filter(Boolean);
-  
+
+
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+console.log(`CORS_ORIGIN configured as: ${corsOrigin}`); // Good for debugging!
+
 const corsOptions = {
-	origin(origin, callback) {
-	  if (!origin || whitelist.includes(origin)) {
-		callback(null, true);
-	  } else {
-		callback(new Error('Not allowed by CORS'));
-	  }
-	},
-	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-	credentials: true
+  origin: corsOrigin, // Use the variable directly
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
 };
-app.options('*', cors(corsOptions));
+
 app.use(cors(corsOptions));
-
-  
-// app.use(cors({
-// 	// origin: [process.env.CORS_ORIGIN || "http://localhost:5173"],
-// 	origin(origin, cb) {
-// 		if (!origin || whitelist.includes(origin)) return cb(null, true);
-// 		return cb(new Error('Not allowed by CORS'));
-// 	  },
-// 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-// 	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-// 	credentials: true
-// }));
-
 
   
 // middleware for form and json data
