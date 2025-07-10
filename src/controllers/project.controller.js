@@ -173,7 +173,15 @@ const updateProject = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Project not found!');
   }
 
-  if(!project.createdBy.equals(userId)){
+ const projectMember = await ProjectMember.findOne({
+  user: userId,
+  project: id
+ })
+
+ if(!projectMember){
+  throw new ApiError(403, 'You are not authorized to update this project!');
+  }
+  if(projectMember.role !== UserRolesEnum.ADMIN && projectMember.role !== UserRolesEnum.PROJECT_ADMIN){
     throw new ApiError(403, 'You are not authorized to update this project!');
   }
 
@@ -184,8 +192,7 @@ const updateProject = asyncHandler(async (req, res) => {
   );
   if (!updatedProject) {
     throw new ApiError(400, 'Project could not be updated!');
-  }
-  await project.save();
+  }  
 
   return res.status(200).json(new ApiResponse(200, {
     id: updatedProject._id,

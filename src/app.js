@@ -17,8 +17,6 @@ import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
 import subTasksRoutes from './routes/subTasks.routes.js';
 
-
-
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 console.log(`CORS_ORIGIN configured as: ${corsOrigin}`); // Good for debugging!
 
