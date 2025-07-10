@@ -22,25 +22,11 @@ export const isAdmin = asyncHandler(async (req, res, next) => {
 		})
 
 		if (!projecetMember) {
+			throw new ApiError(403, " you are not member of this project");
+		}
+		if (projecetMember.role !== UserRolesEnum.PROJECT_ADMIN) {
 			throw new ApiError(403, "You are not Authorized to perform this action!");
 		}
-		if (projecetMember.role !== UserRolesEnum.ADMIN) {
-			throw new ApiError(403, "You are not Authorized to perform this action!");
-		}
-	} else {
-		if (req.params.projectId) {
-			const projectMember = await ProjectMember.findOne({
-				project: req.params.projectId,
-				user: userId
-			})
-			if (!projectMember) {
-				throw new ApiError(403, "You are not Authorized to perform this action!");
-			}
-			if (projectMember.role !== UserRolesEnum.ADMIN) {
-				throw new ApiError(403, "You are not Authorized to perform this action!");
-			}
-	}
-		
-	}
+	} 	
 	next();
 });
