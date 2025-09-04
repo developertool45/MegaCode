@@ -17,7 +17,7 @@ import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
 import subTasksRoutes from './routes/subTasks.routes.js';
 
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const corsOrigin = process.env.CORS_ORIGIN || 'https://magacode.onrender.com';
 console.log(`CORS_ORIGIN configured as: ${corsOrigin}`); // Good for debugging!
 
 const corsOptions = {
