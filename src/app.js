@@ -23,7 +23,15 @@ console.log(`CORS_ORIGIN configured as: ${corsOrigin}`); // Good for debugging!
 const corsOptions = {
   origin: corsOrigin, // Use the variable directly
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: [
+	"Origin",
+    "Accept",
+    "X-Requested-With",
+    "Content-Type",
+    "Authorization",
+	"device-remember-token",
+	"Access-Control-Allow-Origin", 
+  ],
   credentials: true,
 };
 
