@@ -41,22 +41,29 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
 
     return res.status(401).json(new ApiError(401, 'Please Login again,your token got expired.'));
   } else {
-    const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-    const userId = decoded._id;
-    const user = await User.findById(userId).select(
-      '-password -refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry',
-    );
-
-    if (!user) {
-      return res.status(400).json(new ApiError(400, 'Please Login again.'));
-    }
-    if (user) {
-      const accessToken = await user.generateAccessToken();
-      const refreshToken = await user.generateRefreshToken();
-      res.cookie('accessToken', accessToken, options);
-      res.cookie('refreshToken', refreshToken, options);
-      req.user = user;
-      next();
+    try {
+      const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+      if (!decoded) {
+        throw new ApiError(400, 'Please Login again.');
+      }
+      const userId = decoded._id;
+      const user = await User.findById(userId).select(
+        '-password -refreshToken -verificationToken -emailVerificationToken -emailVerificationTokenExpiry',
+      );
+  
+      if (!user) {
+        throw new ApiError(400, 'user not found!');
+      }
+      if (user) {
+        const accessToken = await user.generateAccessToken();
+        const refreshToken = await user.generateRefreshToken();
+        res.cookie('accessToken', accessToken, options);
+        res.cookie('refreshToken', refreshToken, options);
+        req.user = user;
+        next();
+      }
+    } catch (error) {
+      return res.status(400).json(new ApiError(400, error?.message || 'Please Login again,your token got expired.'));
     }
   }
 });
