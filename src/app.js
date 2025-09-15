@@ -17,7 +17,7 @@ import tasksRoutes from './routes/task.routes.js';
 import notesRoutes from './routes/note.routes.js';
 import subTasksRoutes from './routes/subTasks.routes.js';
 
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const corsOrigin = process.env.CORS_ORIGIN || 'https://tasks-v1mb.onrender.com';
 console.log(`CORS_ORIGIN configured as: ${corsOrigin}`); // Good for debugging!
 
 const corsOptions = {
@@ -37,6 +37,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+
   
 // middleware for form and json data
 app.use(express.json({limit: '10kb'}));
@@ -45,6 +46,7 @@ app.use(express.static('public'));
 //cookie parser
 app.use(cookieParser())
 
+app.set('trust proxy', 1);
 
 const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
