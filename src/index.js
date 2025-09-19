@@ -1,13 +1,14 @@
 import dotenv from 'dotenv';
 import app from './app.js';
-import connectDB from './db/index.js';
+// import connectDB from './db/index.js';
+import connectDB from './db/dbconfig.js';
 dotenv.config({
   path: './.env',
 });
 
 const PORT = process.env.PORT;
 
-connectDB()
+await connectDB()
     .then(() => {
         app.listen(PORT, () => console.log(`server starting listening on ${PORT}`));
     })
