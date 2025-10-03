@@ -9,7 +9,9 @@ const userRegisterUserValidator = () => {
       .notEmpty()
       .withMessage('Email is required')
       .isEmail()
-      .withMessage('Invalid email'),
+      .withMessage('Invalid email')
+      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+      .withMessage('Invalid email format'),
     body('username')
       .trim()
       .notEmpty()
@@ -36,7 +38,9 @@ const loginUserValidator = () => {
       body('email')
         .isEmail()
         .notEmpty()
-        .withMessage('Please enter a valid email address'),
+        .withMessage('Please enter a valid email address')
+        .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+        .withMessage('Invalid email format'),
       body('password')
         .trim()
         .notEmpty()
@@ -46,8 +50,7 @@ const loginUserValidator = () => {
         .isLength({ max: 16 })
         .withMessage('Password must be at most 16 characters long')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
-        .withMessage("Password must contain at least one uppercase, one lowercase letter and one number")
-        
+        .withMessage("Password must contain at least one uppercase, one lowercase letter and one number")        
     ];
 }
 // 🔒 Resend Verification Email
@@ -80,18 +83,23 @@ const resetPasswordValidator = () => [
 const updateProfileValidator = () => [
   body("username")
     .optional()
-    .isLength({ min: 3, max: 12 }).withMessage("Username must be 3-12 characters"),
+    .isLength({ min: 3, max: 12 })
+    .withMessage("Username must be 3-12 characters"),
   body("email")
     .optional()
-    .isEmail().withMessage("Enter a valid email"),
+    .isEmail()     
+    .notEmpty()
+    .withMessage("Enter a valid email"),
 ];
 
 // 🔐 Change Password while logged in
 const changePasswordValidator = () => [
   body("oldPassword")
-    .notEmpty().withMessage("oldPassword password is required"),
+    .notEmpty()
+    .withMessage("oldPassword password is required"),
   body("newPassword")
-    .notEmpty().withMessage("New password is required")
+    .notEmpty()
+    .withMessage("New password is required")
     .isLength({ min: 4 })
     .withMessage('Password must be at least 8 characters long')
     .isLength({ max: 16 })
@@ -134,15 +142,18 @@ const updateProjectValidator = () => [
 // ✅ Add Member Validator
 const addMemberValidator = () => [
   body("email")
-    .notEmpty().withMessage("Member email is required")
-    .isEmail().withMessage("Must be a valid email"),
+    .notEmpty()
+    .withMessage("Member email is required")
+    .isEmail()
+    .withMessage("Must be a valid email"),
 ];
 
 // ✅ Update Member Role Validator
 const updateMemberRoleValidator = () => [
   body("role")
     .notEmpty().withMessage("Role is required")
-    .isIn([UserRolesEnum.MEMBER, UserRolesEnum.PROJECT_ADMIN]).withMessage("Role must be admin or member"),
+    .isIn([UserRolesEnum.MEMBER, UserRolesEnum.PROJECT_ADMIN])
+    .withMessage("Role must be admin or member"),
 ];
 
 // ✅ Create Task Validator

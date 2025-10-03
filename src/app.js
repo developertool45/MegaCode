@@ -34,7 +34,7 @@ const corsOptions = {
   ],
   credentials: true,
 };
-
+app.use(mongoSanitize({ replaceWith: '_' }));
 app.use(cors(corsOptions));
 
 
