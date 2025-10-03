@@ -39,8 +39,7 @@ class DatabaseConnection {
                 throw new Error('MongoDB URI is not defined in environment variables');
             }
 
-            const connectionOptions = {
-                useNewUrlParser: true,
+            const connectionOptions = {               
                 useUnifiedTopology: true,
                 maxPoolSize: 10,
                 serverSelectionTimeoutMS: 5000,
