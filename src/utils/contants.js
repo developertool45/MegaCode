@@ -22,6 +22,6 @@ export const AvailableProjectStatus = Object.values(ProjectStatusEnum);
 export const options = {
   httpOnly: true,
   secure: true,
-  sameSite: 'None', // if you are using https and origin is not same
+  sameSite: 'strict', // if you are using https and origin is not same
   maxAge: 24 * 60 * 60 * 1000,
 };
