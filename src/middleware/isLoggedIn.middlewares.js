@@ -25,7 +25,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
       );
 
       if (!user) {
-        return res.status(400).json(new ApiError(400, 'Please Login again.'));
+        return res.status(401).json(new ApiError(401, 'Please Login again.'));
       }
       if (user) {
         const accessToken = await user.generateAccessToken();
@@ -52,7 +52,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
       );
   
       if (!user) {
-        throw new ApiError(400, 'user not found!');
+        throw new ApiError(401, 'user not found!');
       }
       if (user) {
         const accessToken = await user.generateAccessToken();
@@ -63,7 +63,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
         next();
       }
     } catch (error) {
-      return res.status(401).json(new ApiError(400, error?.message || 'Please Login again,your token got expired.'));
+      return res.status(401).json(new ApiError(401, error?.message || 'Please Login again,your token got expired.'));
     }
   }
 });
