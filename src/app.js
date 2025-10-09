@@ -59,7 +59,7 @@ const limiter = rateLimit({
 //security middleware
 app.use(hpp());
 app.use(helmet());
-// app.use(mongoSanitize());
+app.use(mongoSanitize());
 
 //logger
 if (process.env.NODE_ENV === 'development') {
