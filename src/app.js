@@ -66,7 +66,7 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgon('dev'));
 }
 
-app.use('/api', limiter);
+app.use(limiter);
 
 // all routes
 app.use('/api/v1/healthcheck', healthCheck);
