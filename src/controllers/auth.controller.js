@@ -420,19 +420,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
-      throw new ApiError(401, 'Refresh token not found');
+      throw new ApiError(400, 'Refresh token not found');
     }
 
     const user = await User.findOne({ refreshToken }).select('-password');
     if (!user) {
       throw new ApiError(401, 'Invalid refresh token');
     }
-
     const accessToken = await user.generateAccessToken();
 
-    res.cookie('accessToken', accessToken, options);
-
-    return res.status(200).json(new ApiResponse(200, 'Access token refreshed successfully!'));
+    return res
+      .status(200)
+      .cookie('accessToken', accessToken, options)      
+      .json(new ApiResponse(200, null,'Access token refreshed successfully!'));
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, error, 'User logged In failed.'));
   }

@@ -51,7 +51,7 @@ const Limiter = rateLimit({
 //register user
 router.route('/register').post(userRegisterUserValidator(), validate, registerUser);  
 router.route('/verify-email/').get(VerifyUser);
-router.route('/login').post(loginUserValidator(), validate, Limiter, loginUser);
+router.route('/login').post(loginUserValidator(), validate,loginUser);
 router.route('/verify-email-resend').post(Limiter,resendVerificationValidator(), validate, resendVerificationEmail); 
 router.route('/get-profile').post(isLoggedIn, getCurrentUser);
 router.route('/update-profile').post(isLoggedIn,Limiter, updateProfileValidator(), validate, updateProfile);
